@@ -1,18 +1,18 @@
-# Bindrune
+# Stavebound
 
-**Travel to any portal in the world. What you may carry through is decided by the bindrunes standing
-at the far end — and every bindrune is bought with a boss's head.**
+**Travel to any portal in the world. What you may carry through is decided by the staves standing
+at the far end — and every stave is bought with a boss's head.**
 
 Interact with a portal and pick your destination off the map. The choice belongs to the portal and
 applies to everyone, until someone re-aims it. Walking in travels.
 
-Then the part that makes it more than another any-portal mod. Build an **Elder's Bindrune** beside a
+Then the part that makes it more than another any-portal mod. Build an **Elder's Stave** beside a
 portal and that portal will accept copper, tin and bronze. It will still refuse iron — until you go
-and build a **Bonemass's Bindrune** there too, and it says so in as many words:
+and build a **Bonemass's Stave** there too, and it says so in as many words:
 
-> Iron cannot enter "Copper Mine" — no Bonemass's Bindrune there.
+> Iron cannot enter "Copper Mine" — no Bonemass's Stave there.
 
-**Only the destination is ever checked.** An outpost with no bindrunes can send ore to your base
+**Only the destination is ever checked.** An outpost with no staves can send ore to your base
 forever and never receive any. That asymmetry is the whole point: ore flows *inward*, toward the
 places you have invested in, and outposts stay cheap and disposable.
 
@@ -26,21 +26,21 @@ the portal gets you the reason in words.
 ## Installing
 
 Needs **BepInEx** and **Jotunn**. If you are using a mod manager both come as dependencies and there
-is nothing else to do. By hand, drop `Bindrune.dll` into `BepInEx/plugins`.
+is nothing else to do. By hand, drop `Stavebound.dll` into `BepInEx/plugins`.
 
 **Install it on the server and on every client.** The server works out clearance; clients need the
 map selector and the travel check. Clearance rules synchronise from the server, so nobody can loosen
 them locally.
 
-Removing the mod removes its pieces, so any bindrunes you built will vanish — normal for any mod that
+Removing the mod removes its pieces, so any staves you built will vanish — normal for any mod that
 adds buildables. The extra data it writes is harmless to an unmodded game.
 
-## The bindrunes
+## The staves
 
 Each is built from that biome boss's trophy plus a little of what the biome gives you. Stand one
 within ten metres of a portal and it binds to it.
 
-| Bindrune | Costs | Lets through |
+| Stave | Costs | Lets through |
 |---|---|---|
 | **Elder's** | The Elder trophy · 10 copper · 20 stone | Copper, tin, bronze |
 | **Bonemass's** | Bonemass trophy · 10 iron · 20 stone | Iron and scrap iron |
@@ -75,14 +75,14 @@ playable on a pad.
 | Setting | Does |
 |---|---|
 | `ReaimPermission` | Who may re-aim a portal — anyone, only players a guard stone permits, or admins |
-| `BindruneRadius` | How far a bindrune reaches for its portal. Ten metres by default |
+| `StaveRadius` | How far a stave reaches for its portal. Ten metres by default |
 | `PortalBinding` | Whether a rune binds to the nearest portal or every portal in range |
 | `StrictLadder` | Off by default. On, a site's clearance stops at its first missing rung |
 | `SeamlessTransit` | Off by default. Ends a trip when the destination has loaded rather than on vanilla's eight-second timer — a destination already in memory skips the loading screen entirely |
 | `ShowBlockedCargoOverlay` | Marks the stacks a nearby portal's destination will refuse |
 | `HidePortalNames` | Hides names in the selector, if you would rather navigate by the map |
 
-Which item belongs to which bindrune is configurable too, under `2 - Clearance`. The list of blocked
+Which item belongs to which stave is configurable too, under `2 - Clearance`. The list of blocked
 items is never hand-written — it is read from the game at startup, so a game update adding a new ore
 cannot break the mod. Anything unrecognised is held to the highest tier and named in the log.
 
@@ -93,9 +93,9 @@ log. Turn it off if you would rather it were quiet.
 
 Type `help` in the F5 console for the full list. The useful ones:
 
-- `bindrune_portals` — every portal this game knows about, where it points, and its clearance
-- `bindrune_items` — every item the game refuses to teleport, and which bindrune permits it
-- `bindrune_net` — the sync's state. Run it on a server and a client and compare
+- `stave_portals` — every portal this game knows about, where it points, and its clearance
+- `stave_items` — every item the game refuses to teleport, and which stave permits it
+- `stave_net` — the sync's state. Run it on a server and a client and compare
 
 ## A note on cheating
 

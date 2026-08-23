@@ -1,8 +1,8 @@
 {
-  "name": "Bindrune",
+  "name": "Stavebound",
   "version_number": "0.1.0",
-  "website_url": "https://github.com/recognizerHD/bindrune-portals",
-  "description": "Travel to any portal off the map. What you may carry through is decided by the bindrunes standing at the far end.",
+  "website_url": "https://github.com/recognizerHD/stavebound-portals",
+  "description": "Travel to any portal off the map. What you may carry through is decided by the staves standing at the far end.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2333",
     "ValheimModding-Jotunn-2.29.2"

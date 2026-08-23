@@ -23,10 +23,10 @@
     <!-- <VALHEIM_INSTALL>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim/Contents/MacOS</VALHEIM_INSTALL> -->
 
     <!--
-      Optional. If set, a successful build copies Bindrune.dll straight into your plugins
+      Optional. If set, a successful build copies Stavebound.dll straight into your plugins
       folder, creating it if needed. Leave it unset to build without deploying.
     -->
-    <MOD_DEPLOYPATH>$(VALHEIM_INSTALL)\BepInEx\plugins\Bindrune</MOD_DEPLOYPATH>
+    <MOD_DEPLOYPATH>$(VALHEIM_INSTALL)\BepInEx\plugins\Stavebound</MOD_DEPLOYPATH>
 
     <!--
       If you launch through r2modman or Thunderstore Mod Manager, deploy into the profile
@@ -35,7 +35,7 @@
       your changes do nothing. Replace the profile name with yours.
     -->
     <!--
-    <MOD_DEPLOYPATH>$(APPDATA)\r2modmanPlus-local\Valheim\profiles\Default\BepInEx\plugins\Bindrune</MOD_DEPLOYPATH>
+    <MOD_DEPLOYPATH>$(APPDATA)\r2modmanPlus-local\Valheim\profiles\Default\BepInEx\plugins\Stavebound</MOD_DEPLOYPATH>
     -->
   </PropertyGroup>
 </Project>

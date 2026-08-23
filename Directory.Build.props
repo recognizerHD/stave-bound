@@ -9,7 +9,7 @@
 
   What it depends on here is SolutionDir, because Paths.props reaches Environment.props
   and DoPrebuild.props through it and MSBuild only defines it for .sln builds. Setting
-  it below is therefore what makes `dotnet build Bindrune/Bindrune.csproj` behave the
+  it below is therefore what makes `dotnet build Stavebound/Stavebound.csproj` behave the
   same as building the solution.
 
   Note what this file deliberately does *not* do: import Environment.props itself.
@@ -26,7 +26,7 @@
     <Authors>recognizerHD</Authors>
     <Copyright>Copyright (c) 2026 recognizerHD</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/recognizerHD/bindrune-portals</RepositoryUrl>
+    <RepositoryUrl>https://github.com/recognizerHD/stavebound-portals</RepositoryUrl>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
@@ -34,7 +34,7 @@
     Fail with something readable instead of ~90 "assembly not found" errors when the
     game path is missing or wrong.
   -->
-  <Target Name="BindruneCheckValheimPath" BeforeTargets="BeforeBuild">
+  <Target Name="StaveboundCheckValheimPath" BeforeTargets="BeforeBuild">
     <Error Condition="'$(VALHEIM_INSTALL)' == '' Or !Exists('$(VALHEIM_INSTALL)')"
            Text="VALHEIM_INSTALL is not set to an existing folder (currently: '$(VALHEIM_INSTALL)'). Copy Environment.props.example to Environment.props and set your Valheim install path, or set VALHEIM_INSTALL as an environment variable. See README.md." />
     <Error Condition="'$(VALHEIM_MANAGED)' == '' Or !Exists('$(VALHEIM_MANAGED)')"

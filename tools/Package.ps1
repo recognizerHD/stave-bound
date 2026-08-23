@@ -52,7 +52,7 @@ Write-Host "Packaging $name $version"
 
 # Warn rather than fail: BuildInfo drives the assembly's own version, and a
 # mismatch is confusing later without being fatal now.
-$buildInfo = Join-Path $repo "Bindrune/BuildInfo.cs"
+$buildInfo = Join-Path $repo "Stavebound/BuildInfo.cs"
 if (Test-Path $buildInfo) {
     $declared = (Select-String -Path $buildInfo -Pattern 'Version\s*=\s*"([^"]+)"').Matches.Groups[1].Value
     if ($declared -ne $version) {
@@ -61,13 +61,13 @@ if (Test-Path $buildInfo) {
 }
 
 Write-Host "Building Release..."
-& dotnet build (Join-Path $repo "Bindrune.sln") -c Release -v minimal
+& dotnet build (Join-Path $repo "Stavebound.sln") -c Release -v minimal
 if ($LASTEXITCODE -ne 0) { throw "Build failed; nothing packaged." }
 
-$dll = Join-Path $repo "Bindrune/bin/Release/Bindrune.dll"
-if (-not (Test-Path $dll)) { throw "No Bindrune.dll at '$dll'." }
+$dll = Join-Path $repo "Stavebound/bin/Release/Stavebound.dll"
+if (-not (Test-Path $dll)) { throw "No Stavebound.dll at '$dll'." }
 
-$staging = Join-Path ([System.IO.Path]::GetTempPath()) "bindrune-package-$version"
+$staging = Join-Path ([System.IO.Path]::GetTempPath()) "stave-package-$version"
 if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 New-Item -ItemType Directory -Path (Join-Path $staging "plugins") -Force | Out-Null
 
@@ -79,7 +79,7 @@ Copy-Item (Join-Path $repo "LICENSE") $staging -ErrorAction SilentlyContinue
 Copy-Item $dll (Join-Path $staging "plugins")
 
 if ($IncludeSymbols) {
-    Copy-Item (Join-Path $repo "Bindrune/bin/Release/Bindrune.pdb") (Join-Path $staging "plugins") -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $repo "Stavebound/bin/Release/Stavebound.pdb") (Join-Path $staging "plugins") -ErrorAction SilentlyContinue
 }
 
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null }

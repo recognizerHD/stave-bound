@@ -1,22 +1,22 @@
-# CLAUDE.md — Bindrune
+# CLAUDE.md — Stavebound
 
 Context for Claude Code sessions in this repo.
 
 ## What this is
 
-**Bindrune** — a Valheim BepInEx mod. Two features, one system:
+**Stavebound** — a Valheim BepInEx mod. Two features, one system:
 
 1. **Any-portal travel.** Interact with a portal, pick any portal in the world off the map, and it
    points there for everyone until someone re-aims it. Walking in travels. Rewire, not per-player
    station mode — see DESIGN.md §5, and §13 for what was deferred.
-2. **Destination clearance.** Each portal site has a clearance mask built from physical bindrunes
+2. **Destination clearance.** Each portal site has a clearance mask built from physical staves
    bought with boss trophies. Travel is checked against the mask of the portal you're **arriving
    at**, not the one you're leaving — so ore flows *inward* toward places you've invested in, and
-   outposts with no bindrunes are one-way.
+   outposts with no staves are one-way.
 
 Feature 2 is the reason the mod exists. Feature 1 is table stakes (several mods already do it).
 
-**Read `DESIGN.md` first.** It is the authoritative spec: rules R1–R7, the bindrune ladder, the
+**Read `DESIGN.md` first.** It is the authoritative spec: rules R1–R7, the stave ladder, the
 architecture table, phases, and §9's settled-vs-open decisions. This file only covers how to work in
 the repo.
 
@@ -25,15 +25,15 @@ the repo.
 **Phases 1 to 4 are built and played in game.** Any-portal travel, clearance decided by the
 destination, the feedback that explains both, and optional seamless transit.
 
-Working: the server-swept portal registry (`Portals/`), `bindrune_pid` identity that survives a relog,
+Working: the server-swept portal registry (`Portals/`), `stave_pid` identity that survives a relog,
 one-way targets honoured by a `TeleportWorld.Teleport` prefix, the map-and-list selector with
-clearance chips and a cargo filter (`UI/`), the `ObjectDB` tier map (`Tiers/`), six bindrune pieces
-cloned from a dungeon prop with per-tier tinted cores (`Bindrunes/`), the ten-second site sweep, the
+clearance chips and a cargo filter (`UI/`), the `ObjectDB` tier map (`Tiers/`), six stave pieces
+cloned from a dungeon prop with per-tier tinted cores (`Staves/`), the ten-second site sweep, the
 travel gate with named refusals (`Travel/`), the inventory overlay, build-mode range and binding
 feedback, and a trip that ends when loading does rather than on vanilla's timer.
 
-Console commands, all echoing to the log: `bindrune_portals`, `bindrune_aim`, `bindrune_net`,
-`bindrune_items`, `bindrune_prefabs` / `bindrune_inspect` / `bindrune_preview`. Reach for those before
+Console commands, all echoing to the log: `stave_portals`, `stave_aim`, `stave_net`,
+`stave_items`, `stave_prefabs` / `stave_inspect` / `stave_preview`. Reach for those before
 inferring anything about a running game — several rounds were lost this way already.
 
 **Two things remain, and neither is a feature.** Clearance has never crossed a real network: the
@@ -48,17 +48,17 @@ Deferred as niceties: destination thumbnails and selector favourites.
 Violating any of these means rewriting a lot, so check against them before proposing a change:
 
 - **Clearance is read from the destination, never the source.** No setting changes this. Checking the
-  source too would stop an outpost with no bindrunes sending ore anywhere, which kills the one-way outpost
+  source too would stop an outpost with no staves sending ore anywhere, which kills the one-way outpost
   the whole design rests on.
 - **The portal registry carries each portal's mask.** A client at A needs A's *target's* mask, and
   the target is normally unloaded on that client, so the ZDO mirror alone cannot answer it. This is
   what makes both the travel gate and the inventory overlay possible.
 - **The server computes clearance masks; clients only read them.** A mask is written straight onto the
-  portal's ZDO, recomputed from the bindrunes standing in range — required, because a traveling client
-  can read the destination portal's ZDO but cannot see bindrunes kilometres away.
+  portal's ZDO, recomputed from the staves standing in range — required, because a traveling client
+  can read the destination portal's ZDO but cannot see staves kilometres away.
 - **Never store a ZDOID.** The game renumbers every ZDO on every world load, so a saved ZDOID points
   at nothing — or at whatever inherited its number. Anything that must outlive a session refers to a
-  portal by its `bindrune_pid`; the registry resolves that to a live ZDOID on demand. See DESIGN.md §12.
+  portal by its `stave_pid`; the registry resolves that to a live ZDOID on demand. See DESIGN.md §12.
 - **Never read or write a private game member directly.** Jotunn's publicised assemblies make
   `portal.m_nview` compile, but the real assembly is loaded at runtime and this game build's Mono
   throws `FieldAccessException` on every call — with no build-time warning. Patch methods take
@@ -77,7 +77,7 @@ Violating any of these means rewriting a lot, so check against them before propo
 - **Gamepad navigation in the map selector from the first commit.** Retrofitting Unity UI navigation
   is miserable.
 - **The word *ward* is banned.** Valheim already has a piece called Ward, and the collision made the
-  spec ambiguous. Ours are **bindrunes**; the vanilla piece is the **guard stone**. See DESIGN.md §1.
+  spec ambiguous. Ours are **staves**; the vanilla piece is the **guard stone**. See DESIGN.md §1.
 
 ## Before writing code that touches game internals
 
@@ -103,25 +103,24 @@ every five seconds, so our one-way target has to live in our own key.
 `✓` exists, everything else is where the named concern goes when it's written.
 
 ```
-Bindrune.sln                ✓
+Stavebound.sln              ✓
 Directory.Build.props       ✓ game path + build guards; see "Build setup" below
 DoPrebuild.props            ✓ Jotunn's publicise/MMHOOK prebuild toggle
 Environment.props           ✗ gitignored, machine-local (copy from .example)
-Bindrune/
-  Bindrune.csproj           ✓
+Stavebound/
+  Stavebound.csproj         ✓
   BuildInfo.cs              ✓ GUID / name / version consts
   Plugin.cs                 ✓ BepInPlugin entry, Harmony bootstrap
-  Config/                   ✓ ServerSync'd config
+  Config/                   ✓ ServerSync'd config, selector keys, translations
   Compat/                   ✓ conflicting-mod detection
-  Tiers/                    # ObjectDB scan, prefab -> tier map
-  Portals/                  # registry + server sync
-  Bindrunes/                # bindrune pieces, site resolution
-  Clearance/                # mask type, server recompute
-  Travel/                   # the teleport gate + refusal messages
-  UI/                       # destination panel (keyboard + gamepad)
-  Patches/
-Assets/                     # asset bundle, only if we ship original art
-DESIGN.md  CLAUDE.md  README.md  LICENSE
+  Tiers/                    ✓ ObjectDB scan, prefab -> tier map, the Clearance mask
+  Portals/                  ✓ registry + server sync
+  Staves/                   ✓ the six pieces, tinting, site resolution
+  Travel/                   ✓ the teleport gate, refusals, cargo preview, transit
+  UI/                       ✓ destination selector (keyboard + gamepad)
+  Patches/                  ✓
+Assets/                     ✗ asset bundle, only if we ever ship original art
+DESIGN.md  CLAUDE.md  README.md  BUILDING.md  CHANGELOG.md  LICENSE
 ```
 
 ## Build setup — settled, don't re-litigate
@@ -144,7 +143,7 @@ Nothing in the build writes into the repo; the prebuild writes only into the gam
 
 ## Working notes
 
-- Suggested plugin GUID: `com.recognizerhd.bindrune`.
+- Suggested plugin GUID: `com.recognizerhd.stavebound`.
 - Detect conflicting mods by GUID at startup (Valheim Plus, Advanced Portals, Progression Portals,
   Gate of Ore-thority, unrestricted-portal mods) and log a loud warning — don't fight over patches.
-- Costs in the bindrune ladder are **placeholders**. Don't treat them as balanced.
+- Costs in the stave ladder are **placeholders**. Don't treat them as balanced.

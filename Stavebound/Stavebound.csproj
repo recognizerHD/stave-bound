@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <!-- net48 is what the Jotunn mod template targets; the game runs Mono 4.x. -->
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>Stavebound</RootNamespace>
+    <AssemblyName>Stavebound</AssemblyName>
+    <!-- Keep in step with Stavebound.BuildInfo.Version. -->
+    <Version>0.1.0</Version>
+    <LangVersion>10</LangVersion>
+    <Deterministic>true</Deterministic>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <WarningLevel>4</WarningLevel>
+    <!--
+      Game and BepInEx assemblies arrive via Jotunn's props, and copying them next to
+      our dll would both bloat the plugin folder and stage game files for accidental
+      commit. We ship exactly one assembly.
+    -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <!--
+    Jotunn pulls in the whole reference set: publicised game assemblies, BepInEx,
+    0Harmony, and every UnityEngine module. Nothing else needs referencing by hand,
+    and none of it is redistributed with the build.
+  -->
+  <ItemGroup>
+    <PackageReference Include="JotunnLib" Version="2.29.2" />
+  </ItemGroup>
+
+  <!--
+    Jotunn 2.29.2's reference list includes UnityEngine.ProfilerModule.dll, which this Valheim build
+    does not ship, so every build warns MSB3245 about it. Nothing here profiles, so drop the
+    reference rather than train ourselves to read past a warning. Revisit if a future game build
+    starts shipping the module.
+  -->
+  <ItemGroup>
+    <Reference Remove="UnityEngine.ProfilerModule" />
+  </ItemGroup>
+
+  <!--
+    Optional convenience: drop the built plugin into BepInEx/plugins on success.
+    Creates the folder if it isn't there — setting MOD_DEPLOYPATH is the statement of intent, and
+    silently skipping the copy because the folder doesn't exist yet reads as a broken build.
+  -->
+  <Target Name="StaveboundDeploy" AfterTargets="Build" Condition="'$(MOD_DEPLOYPATH)' != ''">
+    <MakeDir Directories="$(MOD_DEPLOYPATH)" />
+    <Message Importance="high" Text="Deploying $(TargetFileName) to $(MOD_DEPLOYPATH)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MOD_DEPLOYPATH)" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(MOD_DEPLOYPATH)"
+          Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+  </Target>
+
+</Project>

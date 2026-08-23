@@ -1,4 +1,4 @@
-# Building Bindrune
+# Building Stavebound
 
 Everything a contributor needs. Players want [README.md](README.md); the design and the reasoning
 behind it are in [DESIGN.md](DESIGN.md).
@@ -17,7 +17,7 @@ into Valheim, and the game run once so BepInEx generates its folders.
 2. Build:
 
    ```sh
-   dotnet build Bindrune.sln -c Release
+   dotnet build Stavebound.sln -c Release
    ```
 
    The first build runs Jotunn's prebuild task, which publicises the game assemblies and generates
@@ -25,7 +25,7 @@ into Valheim, and the game run once so BepInEx generates its folders.
    that has run you can set `ExecutePrebuild` to `false` in `DoPrebuild.props` for faster builds; set
    it back to `true` after a game update.
 
-3. The output is a single `Bindrune.dll`. Set `MOD_DEPLOYPATH` in `Environment.props` to have a
+3. The output is a single `Stavebound.dll`. Set `MOD_DEPLOYPATH` in `Environment.props` to have a
    successful build copy it straight into `BepInEx/plugins`.
 
 If the game path is wrong or BepInEx is missing, the build stops with one plain error saying which,
@@ -37,7 +37,7 @@ r2modman and Thunderstore Mod Manager start Valheim with Doorstop pointed at the
 so a build copied into the game folder is never loaded. Point `MOD_DEPLOYPATH` at the profile instead:
 
 ```
-%APPDATA%\r2modmanPlus-local\Valheim\profiles\<profile>\BepInEx\plugins\Bindrune
+%APPDATA%\r2modmanPlus-local\Valheim\profiles\<profile>\BepInEx\plugins\Stavebound
 ```
 
 Getting this wrong costs an evening, because everything looks correct and nothing you change has any
@@ -62,9 +62,9 @@ same `VALHEIM_INSTALL` the build uses, and copies nothing out of the game folder
 Some things only exist at runtime — prefab names and models live in asset bundles, where no decompiler
 reaches. Those are answered from inside a running game, and the answers echo to the log:
 
-- `bindrune_prefabs <text>[,<text>…]` — search loaded prefabs, marked as pieces or items
-- `bindrune_inspect <prefab>` — object tree, components, materials, shader colours
-- `bindrune_preview <prefab>` — place a look-at-only copy of something vanilla `spawn` refuses
+- `stave_prefabs <text>[,<text>…]` — search loaded prefabs, marked as pieces or items
+- `stave_inspect <prefab>` — object tree, components, materials, shader colours
+- `stave_preview <prefab>` — place a look-at-only copy of something vanilla `spawn` refuses
 
 ## Toolchain
 
@@ -81,7 +81,7 @@ Two traps worth knowing before you write anything against the game:
   `FieldAccessException` at runtime, with no build warning. Patches take Harmony's `___fieldName`
   parameter; other callers use a cached `AccessTools.FieldRefAccess`.
 - **A ZDOID is not a persistent reference.** The game renumbers every ZDO on every world load.
-  Anything that must outlive a session refers to a portal by its `bindrune_pid`.
+  Anything that must outlive a session refers to a portal by its `stave_pid`.
 
 ## Packaging a release
 
