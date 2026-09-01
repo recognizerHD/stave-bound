@@ -45,6 +45,63 @@ namespace Stavebound.Config
     }
 
     /// <summary>
+    /// Which end of a trip a site's clearance counts for. See DESIGN.md R3.
+    /// <para>
+    /// One rule for the whole world, synced from the server. Every option resolves to the same
+    /// question — <em>does either end of this trip vouch for the tier being carried?</em> — and
+    /// differs only in which ends are allowed to answer:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><see cref="Receive"/> — the destination's staves, and only those.</item>
+    /// <item><see cref="Deliver"/> — the departure portal's staves, and only those.</item>
+    /// <item><see cref="Both"/> — either end's, so a tier travels if one end has it.</item>
+    /// </list>
+    /// <para>
+    /// Because each option is a union of the masks it counts, and the server already trims each mask
+    /// to a prefix of the ladder when <c>StrictLadder</c> is on, combining two masks cannot
+    /// manufacture a gap: the union of two prefixes is the longer prefix. The two settings therefore
+    /// do not interact, which is why neither has to know about the other.
+    /// </para>
+    /// </summary>
+    internal enum MaterialFlow
+    {
+        /// <summary>
+        /// Only the destination is asked. A site accepts what its own staves permit, from anywhere,
+        /// and can send those metals on only to somewhere that permits them too.
+        /// <para>
+        /// This is the asymmetry the mod was designed around: an outpost with no staves can send ore
+        /// to your base forever and never receive any, because arriving is checked and departing is
+        /// not. Ore flows inward, toward the places you have invested in.
+        /// </para>
+        /// </summary>
+        Receive,
+
+        /// <summary>
+        /// Only the portal you leave from is asked — <see cref="Receive"/> reflected. A site sends
+        /// what its staves permit anywhere, and takes those metals back only from somewhere that
+        /// permits them too.
+        /// <para>
+        /// Ore flows <em>outward</em>: a fully equipped base can supply bare outposts with anything,
+        /// while an outpost cannot ship its own ore home until it has staves of its own. The reverse
+        /// of the shipped rule, for a group that would rather kit out a frontier than feed a capital.
+        /// </para>
+        /// </summary>
+        Deliver,
+
+        /// <summary>
+        /// Either end is enough, and the default. A site's staves cover both arriving and departing,
+        /// so metals move freely between it and anywhere else; only two sites that <em>both</em> lack
+        /// the tier cannot pass it between them.
+        /// <para>
+        /// Investment still gates everything — nothing moves that neither end has paid for — but the
+        /// one-way outpost of <see cref="Receive"/> becomes something you opt into rather than the
+        /// law. The gentlest of the three, and the one that punishes a forgotten stave least.
+        /// </para>
+        /// </summary>
+        Both,
+    }
+
+    /// <summary>
     /// Every config entry the mod owns, bound once from <see cref="Plugin"/>.
     /// <para>
     /// Entries marked synced are admin-only: Jotunn pushes the server's value to every client and
@@ -78,6 +135,7 @@ namespace Stavebound.Config
         internal static ConfigEntry<bool> StrictLadder { get; private set; }
         internal static ConfigEntry<float> StaveRadius { get; private set; }
         internal static ConfigEntry<PortalBinding> Binding { get; private set; }
+        internal static ConfigEntry<MaterialFlow> Flow { get; private set; }
 
         // Which blocked item belongs to which stave. The *list* of blocked items is never
         // configured — it is read from ObjectDB at runtime (§4) — but the mapping has to be, because
@@ -163,6 +221,18 @@ namespace Stavebound.Config
                 Synced("Nearest: a stave grants its clearance to the single closest portal in range. " +
                        "Re-aiming reaches everywhere from one portal, so a site only needs one. " +
                        "AllInRadius: every portal in range, for a base spread across more than one."));
+
+            Flow = config.Bind(
+                SectionClearance,
+                "MaterialFlow",
+                MaterialFlow.Both,
+                Synced("Which end of a trip a site's staves count for. Receive: only the destination " +
+                       "is checked, so a site takes what its staves permit from anywhere but cannot " +
+                       "send those metals somewhere that lacks them - ore flows inward and outposts " +
+                       "are one-way. Deliver: the mirror image, only the portal you leave is checked, " +
+                       "so a stocked base can supply bare outposts but they cannot ship home. Both " +
+                       "(default): either end is enough, and only two sites that both lack a tier " +
+                       "cannot pass it between them."));
 
             // Prefab names, not display names, because prefab names are what ObjectDB is keyed on and
             // what survives a language change. These defaults are a starting guess: whatever they get

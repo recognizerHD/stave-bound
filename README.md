@@ -12,16 +12,22 @@ and build a **Bonemass's Stave** there too, and it says so in as many words:
 
 > Iron cannot enter "Copper Mine" — no Bonemass's Stave there.
 
-**Only the destination is ever checked.** An outpost with no staves can send ore to your base
-forever and never receive any. That asymmetry is the whole point: ore flows *inward*, toward the
-places you have invested in, and outposts stay cheap and disposable.
+**One end of the trip has to have paid.** By default that can be either end, so a site with an iron
+stave both takes iron from anywhere and sends it anywhere — and two sites that *both* lack it cannot
+pass iron between them at all.
+
+Set `MaterialFlow` to `Receive` and only the destination counts, which is the sharper rule: an
+outpost with no staves can then send ore to your base forever and never receive any. Ore flows
+*inward*, toward the places you have invested in, and outposts stay cheap, disposable and one-way.
+`Deliver` mirrors it, if you would rather supply a frontier than feed a capital.
 
 You are told before you commit, not at the wall. The portal's runes go dark when it will refuse what
 you are holding, the offending stacks are marked in your inventory while you pack, and walking up to
 the portal gets you the reason in words.
 
 > **One caveat.** Clearance has been played thoroughly in single player but has not yet been tested
-> with two machines connected. It is safe to try on a server; just do not be shocked by a rough edge.
+> with two machines connected, and `MaterialFlow` has not been played at all — it is new, and only
+> reasoned about. It is safe to try on a server; just do not be shocked by a rough edge.
 
 ## Installing
 
@@ -75,6 +81,7 @@ playable on a pad.
 | Setting | Does |
 |---|---|
 | `ReaimPermission` | Who may re-aim a portal — anyone, only players a guard stone permits, or admins |
+| `MaterialFlow` | Which end of a trip a site's staves count for. `Both` by default — either end is enough. `Receive`: only the destination, so outposts are one-way. `Deliver`: only the portal you leave |
 | `StaveRadius` | How far a stave reaches for its portal. Ten metres by default |
 | `PortalBinding` | Whether a rune binds to the nearest portal or every portal in range |
 | `StrictLadder` | Off by default. On, a site's clearance stops at its first missing rung |

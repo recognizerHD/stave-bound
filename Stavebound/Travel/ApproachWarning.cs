@@ -62,7 +62,7 @@ namespace Stavebound.Travel
 
             ClearanceGate.Refusal refusal = ClearanceGate.FirstRefusal(
                 nearby.GetInventory(),
-                ClearanceGate.MaskOf(destination));
+                ClearanceGate.EffectiveMask(portal, destination));
 
             if (refusal == null)
             {

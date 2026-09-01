@@ -141,7 +141,7 @@ namespace Stavebound.Patches
             {
                 ClearanceGate.Refusal refusal = ClearanceGate.FirstRefusal(
                     player.GetInventory(),
-                    ClearanceGate.MaskOf(destination));
+                    ClearanceGate.EffectiveMask(zdo, destination));
 
                 if (refusal != null)
                 {
@@ -258,14 +258,15 @@ namespace Stavebound.Patches
                 return;
             }
 
-            if (!ClearanceGate.TryResolveDestination(___m_nview.GetZDO(), out ZDO destination, out long _) ||
+            ZDO source = ___m_nview.GetZDO();
+            if (!ClearanceGate.TryResolveDestination(source, out ZDO destination, out long _) ||
                 destination == null)
             {
                 // Unreachable or not yet known: vanilla's own "no target" handling is right.
                 return;
             }
 
-            bool allowed = ClearanceGate.Allows(nearby, destination, __instance.m_allowAllItems);
+            bool allowed = ClearanceGate.Allows(nearby, source, destination, __instance.m_allowAllItems);
             __instance.m_target_found.SetActive(allowed);
 
             // The glow is the ambient half of §7's approach-time warning; this is the half that names

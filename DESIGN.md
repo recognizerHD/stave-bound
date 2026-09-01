@@ -77,7 +77,7 @@ way you walked in, with a configurable fade.
 |---|---|
 | **R1** | Each portal carries a **clearance mask** — independent per-tier flags, not a single level. A site with Elder's + Moder's staves accepts copper and silver but still refuses iron. Nothing forces you up the ladder in order. |
 | **R2** | A site is **a portal and the staves standing near it**. Each stave grants its tier to the **nearest portal** within `StaveRadius` (default 10 m); `PortalBinding = AllInRadius` instead grants it to every portal in range, for a base spread across two portals. One relationship, resolved from position, storing nothing. |
-| **R3** | Only the **destination** is checked — always, with no setting to change it. You need a stave at every site you want to send resources *to*; where you set out from is never asked about. |
+| **R3** | Which end of a trip is checked is `MaterialFlow`, one rule for the whole world: `Receive` asks the destination, `Deliver` asks the portal you leave, `Both` (**the default**) asks either. Under all three, clearance stays a property of a **place** — somewhere on the trip has to have been paid for, and a tier neither end holds never moves. `Receive` is the original rule and the only one that keeps outposts one-way. |
 | **R4** | Every stave costs that biome boss's **trophy** plus a little of **the metal it unlocks**. You always earn the shortcut by making the haul the hard way once. |
 | **R5** | Trophies are farmable by re-summoning, so the ladder is a **cost curve, not a wall**. |
 | **R6** | Refusals **name the reason**: not "you cannot teleport with that" but `Iron cannot enter "Copper Mine" — no Bonemass's Stave at that site.` |
@@ -390,7 +390,7 @@ one command per machine — see §6.
 | Station or rewire? | **Rewire, selected on the map** (§5). A portal's destination belongs to the portal and applies to everyone; walk in to travel, interact to re-aim. Station is deferred to §13 and is not being built. |
 | Independent per-tier flags, or a strict ladder (tier 3 requires 1 + 2)? | **Independent flags.** `StrictLadder` opts into requiring the lower staves first. |
 | Anchor-and-radius, or bind each stave to one portal? | **Auto-bind each rune to the nearest portal in range** (`PortalBinding = Nearest`), no anchor and no manual binding UI. `AllInRadius` covers every portal at the site. |
-| Does the source ever matter? | **No — never, and there is no setting.** R3 rewritten to say so. |
+| Does the source ever matter? | **Yes, under `MaterialFlow`** — `Receive` (destination only, the original rule), `Deliver` (source only), `Both` (either, and the shipped default). Two earlier drafts said *never, and there is no setting*; that is now wrong, and §10 records what the default gives up. |
 | Own the destination list, or build on XPortal (GPLv3)? | **Own it.** Inspiration only, no copied code, MIT preserved. §11 spells out where the line sits. |
 | Who may re-aim a portal? | **`ReaimPermission`, default `Anyone`**, with `GuardStonePermitted` / `Admin` — see §5. |
 | How is a player warned *before* they commit? | **A blocked overlay on inventory icons near a portal**, plus R6's named message on entry — see §5. |
@@ -455,6 +455,25 @@ nothing about the tenth *journey*, and the journey is what the mod is actually c
 So the numbers in §4 stand: a trophy and ten of the metal, which reads as a real errand without
 pretending to be a wall. If play shows otherwise the lever is the metal component, and it is a config
 line rather than a design change.
+
+### What the `Both` default costs that brake
+
+The argument above rests on R3 as it was: clearance read at the destination, so *every* site you want
+to receive at needs its own journey. `MaterialFlow = Both` weakens that, and the weakening is worth
+stating plainly rather than discovering in play.
+
+Under `Both`, one end suffices. A single fully-staved capital therefore makes the whole network
+permeable **in two hops** — outpost A to the capital, capital to outpost B — where under `Receive` the
+second leg is refused until B has a stave of its own. Direct A-to-B still needs one of them to have
+paid, so the rule is not nothing; but the per-site journey stops being per-site once a hub exists.
+
+That is a real cost and it buys real things: no forgotten stave stranding a load at a portal you
+built last week, and metals moving *out* to a frontier that has not been kitted out yet. The lever if
+it proves too loose is `Receive`, which restores the original rule exactly and needs no code — which
+is the reason this is a setting rather than a rewrite.
+
+**This has not been played.** Both the two-hop effect and whether `Both` or `Receive` is the better
+shipped default are open questions that want real sessions — see TESTING.md.
 
 ---
 

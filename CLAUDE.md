@@ -9,10 +9,11 @@ Context for Claude Code sessions in this repo.
 1. **Any-portal travel.** Interact with a portal, pick any portal in the world off the map, and it
    points there for everyone until someone re-aims it. Walking in travels. Rewire, not per-player
    station mode — see DESIGN.md §5, and §13 for what was deferred.
-2. **Destination clearance.** Each portal site has a clearance mask built from physical staves
-   bought with boss trophies. Travel is checked against the mask of the portal you're **arriving
-   at**, not the one you're leaving — so ore flows *inward* toward places you've invested in, and
-   outposts with no staves are one-way.
+2. **Site clearance.** Each portal site has a clearance mask built from physical staves bought with
+   boss trophies, and a trip is checked against it. `MaterialFlow` picks which end answers —
+   `Receive` the destination, `Deliver` the portal you leave, `Both` (default) either — so ore
+   flows *inward* toward places you've invested in, outward to a frontier, or both ways once one
+   end has paid. See DESIGN.md R3 and §10.
 
 Feature 2 is the reason the mod exists. Feature 1 is table stakes (several mods already do it).
 
@@ -36,10 +37,14 @@ Console commands, all echoing to the log: `stave_portals`, `stave_aim`, `stave_n
 `stave_items`, `stave_prefabs` / `stave_inspect` / `stave_preview`. Reach for those before
 inferring anything about a running game — several rounds were lost this way already.
 
-**Two things remain, and neither is a feature.** Clearance has never crossed a real network: the
-registry sync was proven on two machines before masks existed, so no client has yet received a
-non-zero one. `LogNetworkSync` stays on until it has, and is turned off in the same change that
-confirms it. And the §4 costs are placeholders that want real play (§10).
+**What remains is testing, not features — and the backlog is now large enough to have its own file.**
+Read `TESTING.md` before proposing anything be called done. The headline: clearance has never crossed
+a real network (the registry sync was proven on two machines *before* masks existed, so no client has
+yet received a non-zero one), and `MaterialFlow` has never been played at all. `LogNetworkSync` stays
+on until the first of those is confirmed, and goes off in the same change that confirms it.
+
+Nothing below Phase 4 has been exercised on a dedicated server, because the local one would not start
+— that is the blocker, and it is not a mod bug as far as anyone knows.
 
 Deferred as niceties: destination thumbnails and selector favourites.
 
@@ -47,9 +52,13 @@ Deferred as niceties: destination thumbnails and selector favourites.
 
 Violating any of these means rewriting a lot, so check against them before proposing a change:
 
-- **Clearance is read from the destination, never the source.** No setting changes this. Checking the
-  source too would stop an outpost with no staves sending ore anywhere, which kills the one-way outpost
-  the whole design rests on.
+- **Clearance is a property of a place, and one end of the trip must have paid for it.** Which end is
+  asked is `MaterialFlow` — `Receive` the destination, `Deliver` the departure, `Both` (default)
+  either — and every caller gets that answer from `ClearanceGate.EffectiveMask`, never by reading a
+  mask itself. What no setting may do is let a tier through that *neither* end holds, or make
+  clearance a property of a player rather than a place.
+  (This replaces an earlier invariant reading "destination, never the source; no setting changes
+  this". `Receive` is that rule, and is now one of three.)
 - **The portal registry carries each portal's mask.** A client at A needs A's *target's* mask, and
   the target is normally unloaded on that client, so the ZDO mirror alone cannot answer it. This is
   what makes both the travel gate and the inventory overlay possible.

@@ -69,7 +69,7 @@ namespace Stavebound.Travel
                 return false;
             }
 
-            mask = ClearanceGate.MaskOf(destination);
+            mask = ClearanceGate.EffectiveMask(zdo, destination);
             return true;
         }
 

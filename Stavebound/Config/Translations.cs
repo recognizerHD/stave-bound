@@ -40,6 +40,8 @@ namespace Stavebound.Config
         internal const string SelectorByDistance = "stave_sel_by_distance";
         internal const string SelectorByName = "stave_sel_by_name";
         internal const string SelectorFiltered = "stave_sel_filtered";
+        internal const string SelectorFlowBoth = "stave_sel_flow_both";
+        internal const string SelectorFlowDeliver = "stave_sel_flow_deliver";
         internal const string SelectorCarryingNothing = "stave_sel_carrying_nothing";
         internal const string SelectorTakes = "stave_sel_takes";
         internal const string SelectorRefuses = "stave_sel_refuses";
@@ -97,6 +99,12 @@ namespace Stavebound.Config
             { SelectorByDistance, "by distance" },
             { SelectorByName, "by name" },
             { SelectorFiltered, ", only what takes my load" },
+
+            // Shown only when MaterialFlow is not Receive, because that is when a row's chips stop
+            // being the whole story: the chips list the destination's own staves, and under these two
+            // modes this portal's staves decide part or all of the verdict.
+            { SelectorFlowBoth, "either end counts - this portal's staves travel with you" },
+            { SelectorFlowDeliver, "only this portal's staves count, not the destination's" },
             { SelectorCarryingNothing, "Carrying nothing a portal would refuse." },
             { SelectorTakes, "This one takes your load." },
             { SelectorRefuses, "This one would refuse you." },

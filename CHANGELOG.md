@@ -32,8 +32,20 @@ Five console commands for looking at what the mod believes: `stave_portals`,
 `stave_aim`, `stave_net`, `stave_items`, and the prefab tools
 `stave_prefabs` / `stave_inspect` / `stave_preview`.
 
+**Which end pays.** `MaterialFlow` decides whether a site's staves count for
+arriving, departing, or both. `Both` is the default: either end is enough, so a
+site with an iron stave takes iron from anywhere and sends it anywhere, and only
+two sites that both lack iron cannot pass it between them. `Receive` is the
+sharper original rule — only the destination counts, so outposts are one-way.
+`Deliver` mirrors that, for supplying a frontier rather than feeding a capital.
+
 ### Known gaps
 
-- Clearance has never been tested with two machines connected.
+See TESTING.md for the full list. The two that matter most:
+
+- Clearance has never been tested with two machines connected, so no client has
+  ever received a non-zero mask.
+- `MaterialFlow` has never been played — in single player either. It is built and
+  reasoned about, and that is all.
 - `LogNetworkSync` defaults **on** and narrates the portal sync into the log. It
-  will default off once the above has been verified.
+  will default off once the first of these has been verified.

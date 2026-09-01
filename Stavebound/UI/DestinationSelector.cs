@@ -5,6 +5,7 @@ using System.Text;
 using Stavebound.Config;
 using Stavebound.Portals;
 using Stavebound.Tiers;
+using Stavebound.Travel;
 using Jotunn.Managers;
 using UnityEngine;
 using UnityEngine.UI;
@@ -73,6 +74,13 @@ namespace Stavebound.UI
         /// times a frame for an answer that cannot change while a modal panel is up.
         /// </summary>
         private static Clearance _carrying;
+
+        /// <summary>
+        /// The departure portal's own clearance, read once when the selector opens. Under
+        /// <c>MaterialFlow.Deliver</c> and <c>Both</c> it is half of every row's verdict, and it
+        /// cannot change while a modal panel is up.
+        /// </summary>
+        private static Clearance _sourceMask;
         private static GameObject _panel;
         private static Text _text;
         private static bool _updateSeen;
@@ -104,6 +112,7 @@ namespace Stavebound.UI
 
             _sourcePosition = portal.transform.position;
             _sourcePid = sourcePid;
+            _sourceMask = ClearanceGate.MaskOf(source);
             _carrying = CarriedTiers(who as Player);
             _onlyWhatAcceptsMyCargo = false;
 
@@ -392,6 +401,16 @@ namespace Stavebound.UI
                 : Translations.SelectorByName);
             string filtered = _onlyWhatAcceptsMyCargo ? Translations.Get(Translations.SelectorFiltered) : string.Empty;
             panel.AppendLine($"<size=13>{ordering}{filtered}</size>");
+
+            // Under Receive the chips on each row are the whole answer, so saying anything would be
+            // noise. Under the other two they are not, and a player watching a chipless destination
+            // read as green deserves to be told why rather than left to guess.
+            string flow = FlowNote();
+            if (flow != null)
+            {
+                panel.AppendLine($"<size=13><color=#B9A67A>{flow}</color></size>");
+            }
+
             panel.AppendLine(Verdict(destination));
             panel.AppendLine();
 
@@ -515,9 +534,32 @@ namespace Stavebound.UI
                 : $"<size=13><color=#E06C4A>{Translations.Get(Translations.SelectorRefuses)}</color></size>  {tally}";
         }
 
+        /// <summary>
+        /// One line explaining where clearance is being read from, or null under
+        /// <c>MaterialFlow.Receive</c>, where each row's chips already say it.
+        /// </summary>
+        private static string FlowNote()
+        {
+            switch (StaveboundConfig.Flow?.Value ?? MaterialFlow.Both)
+            {
+                case MaterialFlow.Both:
+                    return Translations.Get(Translations.SelectorFlowBoth);
+                case MaterialFlow.Deliver:
+                    return Translations.Get(Translations.SelectorFlowDeliver);
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Whether this trip may carry what the player is holding — the same question the travel gate
+        /// answers, asked through the same <see cref="ClearanceGate.EffectiveMask"/> so the list can
+        /// never promise a trip the portal then refuses.
+        /// </summary>
         private static bool Accepts(PortalRecord portal)
         {
-            return ((Clearance)portal.ClearanceMask & _carrying) == _carrying;
+            Clearance permitted = ClearanceGate.EffectiveMask(_sourceMask, (Clearance)portal.ClearanceMask);
+            return (permitted & _carrying) == _carrying;
         }
 
         /// <summary>

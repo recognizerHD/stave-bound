@@ -7,12 +7,18 @@ using UnityEngine;
 namespace Stavebound.Travel
 {
     /// <summary>
-    /// Decides whether a player may carry what they are carrying into a particular destination.
+    /// Decides whether a player may carry what they are carrying from one portal to another.
     /// <para>
-    /// The rule the whole mod exists for (R3): <b>only the destination is checked</b>, never the
-    /// portal you are standing in. That asymmetry is what makes ore flow inward — an outpost with no
-    /// staves can send iron to your base all day and can never receive any, because sending asks
-    /// nothing of the place you set out from.
+    /// The rule the whole mod exists for (R3): clearance is a property of a <b>place</b>, not of a
+    /// player or an account. <c>MaterialFlow</c> picks which end of the trip is asked —
+    /// <c>Receive</c> the destination, <c>Deliver</c> the portal you leave, <c>Both</c> either — and
+    /// <see cref="EffectiveMask"/> is where that choice is made, once, for every caller.
+    /// </para>
+    /// <para>
+    /// <c>Receive</c> is the asymmetry the design was built around: an outpost with no staves can
+    /// send iron to your base all day and never receive any, because arriving is checked and
+    /// departing is not. Under the shipped default of <c>Both</c> that asymmetry is opt-in rather
+    /// than law, but the thing that never changes is that <em>somewhere</em> had to be paid for.
     /// </para>
     /// <para>
     /// Client-trusting by necessity: player inventories are client-side in Valheim, so this runs on
@@ -70,14 +76,15 @@ namespace Stavebound.Travel
         /// May this player carry what they are holding into <paramref name="destination"/>? Used by the
         /// portal glow, which asks the question every frame and only wants a yes or no.
         /// </summary>
-        internal static bool Allows(Player player, ZDO destination, bool allowAllItems)
+        internal static bool Allows(Player player, ZDO source, ZDO destination, bool allowAllItems)
         {
             if (allowAllItems)
             {
                 return true;
             }
 
-            return player != null && FirstRefusal(player.GetInventory(), MaskOf(destination)) == null;
+            return player != null
+                && FirstRefusal(player.GetInventory(), EffectiveMask(source, destination)) == null;
         }
 
         /// <summary>Why a trip was refused, in the terms R6 asks a refusal to be phrased in.</summary>
@@ -86,7 +93,7 @@ namespace Stavebound.Travel
             /// <summary>The item that caused it, by display name.</summary>
             internal string Item;
 
-            /// <summary>The stave the destination is missing.</summary>
+            /// <summary>The stave whichever end of the trip is being asked does not have.</summary>
             internal Clearance Missing;
 
             /// <summary>How many further stacks would also be refused, for a hint rather than a list.</summary>
@@ -94,15 +101,16 @@ namespace Stavebound.Travel
         }
 
         /// <summary>
-        /// The first thing in <paramref name="inventory"/> the destination will not accept, or null if
-        /// the whole load may travel.
+        /// The first thing in <paramref name="inventory"/> that <paramref name="permitted"/> does not
+        /// cover, or null if the whole load may travel. Callers pass the mask from
+        /// <see cref="EffectiveMask"/> rather than either portal's own.
         /// <para>
         /// Only blocked items are considered at all: everything the game is happy to teleport passes
         /// without ever consulting a mask, so a site with no staves still behaves like a vanilla
         /// portal for wood, food and tools.
         /// </para>
         /// </summary>
-        internal static Refusal FirstRefusal(Inventory inventory, Clearance destinationMask)
+        internal static Refusal FirstRefusal(Inventory inventory, Clearance permitted)
         {
             if (inventory == null)
             {
@@ -124,7 +132,7 @@ namespace Stavebound.Travel
                 string prefab = item.m_dropPrefab != null ? item.m_dropPrefab.name : null;
                 Clearance required = TierMap.RequiredFor(prefab);
 
-                if (destinationMask.Permits(required))
+                if (permitted.Permits(required))
                 {
                     continue;
                 }
@@ -194,6 +202,47 @@ namespace Stavebound.Travel
         internal static Clearance MaskOf(ZDO portal)
         {
             return portal == null ? Clearance.None : (Clearance)portal.GetInt(ZdoKeys.ClearanceMask, 0);
+        }
+
+        /// <summary>
+        /// The clearance that actually governs a trip, which is the one every caller wants — the glow,
+        /// the gate, the approach warning, the inventory overlay and the selector all have to agree,
+        /// and they agree by asking this rather than by each combining the masks themselves.
+        /// <para>
+        /// <c>Receive</c> answers with the destination's mask, <c>Deliver</c> with the departure
+        /// portal's, <c>Both</c> with the union. Passing a null portal contributes nothing rather than
+        /// failing: an unresolved end simply does not vouch for anything.
+        /// </para>
+        /// </summary>
+        internal static Clearance EffectiveMask(ZDO source, ZDO destination)
+        {
+            return EffectiveMask(MaskOf(source), MaskOf(destination));
+        }
+
+        /// <summary>
+        /// <see cref="EffectiveMask(ZDO,ZDO)"/> for callers holding masks rather than portals — the
+        /// selector, which reads every candidate straight out of the registry and never resolves a
+        /// ZDO for a destination the player has not visited.
+        /// </summary>
+        internal static Clearance EffectiveMask(Clearance source, Clearance destination)
+        {
+            // Read through the config entry rather than caching the mode: it is ServerSync'd, so an
+            // admin changing it mid-session has to take effect without a relog.
+            MaterialFlow flow = StaveboundConfig.Flow?.Value ?? MaterialFlow.Both;
+
+            Clearance permitted = Clearance.None;
+
+            if (flow != MaterialFlow.Deliver)
+            {
+                permitted |= destination;
+            }
+
+            if (flow != MaterialFlow.Receive)
+            {
+                permitted |= source;
+            }
+
+            return permitted;
         }
     }
 }
