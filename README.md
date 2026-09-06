@@ -12,14 +12,10 @@ and build a **Bonemass's Stave** there too, and it says so in as many words:
 
 > Iron cannot enter "Copper Mine" — no Bonemass's Stave there.
 
-**One end of the trip has to have paid.** By default that can be either end, so a site with an iron
-stave both takes iron from anywhere and sends it anywhere — and two sites that *both* lack it cannot
-pass iron between them at all.
-
-Set `MaterialFlow` to `Receive` and only the destination counts, which is the sharper rule: an
-outpost with no staves can then send ore to your base forever and never receive any. Ore flows
-*inward*, toward the places you have invested in, and outposts stay cheap, disposable and one-way.
-`Deliver` mirrors it, if you would rather supply a frontier than feed a capital.
+**One end of the trip has to have paid.** By default either end will do, so a site with an iron stave
+both takes iron from anywhere and sends it anywhere — and only two sites that *both* lack it cannot
+pass iron between them. Which end is asked is the dial most worth knowing about; see
+[Which end pays](#which-end-pays).
 
 You are told before you commit, not at the wall. The portal's runes go dark when it will refuse what
 you are holding, the offending stacks are marked in your inventory while you pack, and walking up to
@@ -57,6 +53,25 @@ the ladder in order.
 While you are holding one, a beam shows which portal it would bind to, and a circle shows its reach
 if nothing is close enough.
 
+## Which end pays
+
+`MaterialFlow`, under `2 - Clearance`. One rule for the whole world, set on the server — this is the
+setting that decides how the whole mod feels, so it is worth a minute before you start a save.
+
+| | Asks | What that gives you |
+|---|---|---|
+| **`Both`** *(default)* | Either end | A site's staves cover arriving **and** departing, so metals move freely between it and anywhere else. Only two sites that both lack a tier cannot pass it. The most forgiving — a stave you forgot to build strands nothing |
+| **`Receive`** | The destination | The sharper rule, and the one the mod was designed around. An outpost with no staves sends ore to your base forever and never receives any. Ore flows **inward**, toward the places you have invested in, and outposts stay cheap, disposable and one-way |
+| **`Deliver`** | The portal you leave | `Receive` mirrored. A stocked base supplies a bare frontier with anything, but that frontier cannot ship its own ore home until it has staves of its own |
+
+Under every one of them, a tier that **neither** end holds never moves. Nothing here lets you carry
+something nobody paid for; it only decides who is allowed to have done the paying.
+
+One thing `Both` gives up, since it is the default and this is easy to discover the hard way: a
+single fully-staved base makes your whole network permeable in two hops — outpost to base, base to
+other outpost. Direct outpost-to-outpost still needs one of them to have paid. If that reads as too
+loose once you have played it, `Receive` is a one-line change and restores the original rule exactly.
+
 ## Controls
 
 | | |
@@ -79,7 +94,7 @@ playable on a pad.
 | `ReaimPermission` | Who may re-aim a portal — anyone, only players a guard stone permits, or admins |
 | `MaterialFlow` | Which end of a trip a site's staves count for. `Both` by default — either end is enough. `Receive`: only the destination, so outposts are one-way. `Deliver`: only the portal you leave |
 | `StaveRadius` | How far a stave reaches for its portal. Ten metres by default |
-| `PortalBinding` | Whether a rune binds to the nearest portal or every portal in range |
+| `PortalBinding` | Whether a stave binds to the nearest portal or every portal in range |
 | `StrictLadder` | Off by default. On, a site's clearance stops at its first missing rung |
 | `SeamlessTransit` | Off by default. Ends a trip when the destination has loaded rather than on vanilla's eight-second timer — a destination already in memory skips the loading screen entirely |
 | `ShowBlockedCargoOverlay` | Marks the stacks a nearby portal's destination will refuse |
@@ -89,8 +104,13 @@ Which item belongs to which stave is configurable too, under `2 - Clearance`. Th
 items is never hand-written — it is read from the game at startup, so a game update adding a new ore
 cannot break the mod. Anything unrecognised is held to the highest tier and named in the log.
 
-While the mod is pre-release, `LogNetworkSync` defaults **on** and narrates portal syncing into the
-log. Turn it off if you would rather it were quiet.
+`LogNetworkSync` defaults **off**. Turn it on before reporting anything about two machines
+disagreeing about a portal — it narrates every sweep, broadcast and receive, and it is the first
+thing anyone will ask for.
+
+Note that changing a default only affects a config file that does not exist yet. If you have played
+an earlier build, your existing `com.recognizerhd.stavebound.cfg` keeps whatever it was written with
+— edit it, or delete it and let the game write a fresh one.
 
 ## Console commands
 
