@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.1.0 — unreleased
+## 0.9.0 — 2026-09-06
 
-First build. Both features work and have been played in single player; the
-clearance half has not yet been exercised across a real network.
+First release. Both features have been played in single player and confirmed on a
+real network. Numbered 0.9 rather than 1.0 because the costs have not been tuned
+over a long game, not because anything is known to be wrong.
 
 **Any-portal travel.** Interact with a portal to pick any portal in the world off
 the map. The choice belongs to the portal and applies to everyone until someone
