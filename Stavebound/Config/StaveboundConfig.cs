@@ -350,10 +350,13 @@ namespace Stavebound.Config
             LogNetworkSync = config.Bind(
                 SectionDiagnostics,
                 "LogNetworkSync",
-                true,
+                false,
                 new ConfigDescription("Log every step of the portal registry's sync - sweeps, broadcasts, " +
                                       "joins and receives - so a multiplayer problem can be read off one " +
-                                      "log instead of reproduced. Local to you."));
+                                      "log instead of reproduced. Local to you. Off by default now that " +
+                                      "clearance has been confirmed across a real network; turn it on " +
+                                      "before reporting anything about portals not agreeing between " +
+                                      "machines, because the first question will be what this says."));
         }
 
         /// <summary>

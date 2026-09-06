@@ -37,14 +37,12 @@ Console commands, all echoing to the log: `stave_portals`, `stave_aim`, `stave_n
 `stave_items`, `stave_prefabs` / `stave_inspect` / `stave_preview`. Reach for those before
 inferring anything about a running game — several rounds were lost this way already.
 
-**What remains is testing, not features — and the backlog is now large enough to have its own file.**
-Read `TESTING.md` before proposing anything be called done. The headline: clearance has never crossed
-a real network (the registry sync was proven on two machines *before* masks existed, so no client has
-yet received a non-zero one), and `MaterialFlow` has never been played at all. `LogNetworkSync` stays
-on until the first of those is confirmed, and goes off in the same change that confirms it.
+**Clearance and `MaterialFlow` have both been confirmed on a real network**, which were the last two
+correctness gates. `LogNetworkSync` now defaults off.
 
-Nothing below Phase 4 has been exercised on a dedicated server, because the local one would not start
-— that is the blocker, and it is not a mod bug as far as anyone knows.
+What remains is judgement, not correctness: the §4 costs are placeholders that have never been tuned,
+and whether `Both` is the right shipped default is an open question about how a long game feels. Those
+and the smaller standing gaps live in `TESTING.md` — read it before proposing anything be called done.
 
 Deferred as niceties: destination thumbnails and selector favourites.
 

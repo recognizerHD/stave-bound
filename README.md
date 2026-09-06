@@ -25,10 +25,6 @@ You are told before you commit, not at the wall. The portal's runes go dark when
 you are holding, the offending stacks are marked in your inventory while you pack, and walking up to
 the portal gets you the reason in words.
 
-> **One caveat.** Clearance has been played thoroughly in single player but has not yet been tested
-> with two machines connected, and `MaterialFlow` has not been played at all — it is new, and only
-> reasoned about. It is safe to try on a server; just do not be shocked by a rough edge.
-
 ## Installing
 
 Needs **BepInEx** and **Jotunn**. If you are using a mod manager both come as dependencies and there

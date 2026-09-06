@@ -41,11 +41,11 @@ sharper original rule — only the destination counts, so outposts are one-way.
 
 ### Known gaps
 
-See TESTING.md for the full list. The two that matter most:
+Clearance and `MaterialFlow` have both now been played on a real network, which
+were the two things holding this back. `LogNetworkSync` defaults **off** as of
+that confirmation — turn it on before reporting anything about portals
+disagreeing between machines.
 
-- Clearance has never been tested with two machines connected, so no client has
-  ever received a non-zero mask.
-- `MaterialFlow` has never been played — in single player either. It is built and
-  reasoned about, and that is all.
-- `LogNetworkSync` defaults **on** and narrates the portal sync into the log. It
-  will default off once the first of these has been verified.
+What is left is judgement rather than correctness, and is listed in TESTING.md:
+the §4 costs have never been tuned, and whether `Both` is the right shipped
+default is an open question about how it feels over a long game.
