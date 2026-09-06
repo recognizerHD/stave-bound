@@ -1,7 +1,7 @@
 {
   "name": "Stavebound",
   "version_number": "0.1.0",
-  "website_url": "https://github.com/recognizerHD/stavebound-portals",
+  "website_url": "https://github.com/recognizerHD/stave-bound",
   "description": "Travel to any portal off the map. What you may carry through is decided by the staves standing at the far end.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2333",
