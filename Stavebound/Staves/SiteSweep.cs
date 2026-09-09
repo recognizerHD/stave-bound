@@ -122,7 +122,7 @@ namespace Stavebound.Staves
         /// </summary>
         private static void Bind(Vector3 runePosition, Clearance tier, float radius, bool all)
         {
-            List<ZDO> portals = ZDOMan.instance?.GetPortals();
+            List<ZDO> portals = ZDOMan.instance?.GetPortalList();
             if (portals == null)
             {
                 return;
@@ -209,7 +209,7 @@ namespace Stavebound.Staves
         /// </summary>
         private static void WriteChangedMasks()
         {
-            List<ZDO> portals = ZDOMan.instance?.GetPortals();
+            List<ZDO> portals = ZDOMan.instance?.GetPortalList();
             if (portals == null)
             {
                 return;

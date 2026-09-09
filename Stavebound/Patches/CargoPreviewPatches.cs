@@ -17,10 +17,13 @@ namespace Stavebound.Patches
     [HarmonyPatch(typeof(InventoryGrid))]
     internal static class CargoPreviewPatches
     {
+        // Game 1.0 promoted the nested InventoryGrid.Element to a top-level InventoryElement, and
+        // replaced its m_pos field with a public Position property. Both are read below; nothing
+        // else about this patch changed. See DESIGN.md SS12.
         [HarmonyPostfix]
         [HarmonyPatch("UpdateGui")]
         private static void MarkWhatTheDestinationRefuses(
-            List<InventoryGrid.Element> ___m_elements,
+            List<InventoryElement> ___m_elements,
             Inventory ___m_inventory)
         {
             if (___m_elements == null || ___m_inventory == null)
@@ -34,14 +37,14 @@ namespace Stavebound.Patches
                 return;
             }
 
-            foreach (InventoryGrid.Element element in ___m_elements)
+            foreach (InventoryElement element in ___m_elements)
             {
                 if (element?.m_noteleport == null || !element.m_used)
                 {
                     continue;
                 }
 
-                ItemDrop.ItemData item = ___m_inventory.GetItemAt(element.m_pos.x, element.m_pos.y);
+                ItemDrop.ItemData item = ___m_inventory.GetItemAt(element.Position.x, element.Position.y);
                 element.m_noteleport.enabled = CargoPreview.WouldBeRefused(item, mask, allowsEverything);
             }
         }

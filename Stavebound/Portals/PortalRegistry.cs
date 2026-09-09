@@ -12,7 +12,7 @@ namespace Stavebound.Portals
     /// Every portal in the world, and the one place the rest of the mod asks about them.
     /// <para>
     /// Server-authoritative by necessity rather than by taste. A client's <c>ZDOMan</c> only holds
-    /// the ZDOs near it, so <c>ZDOMan.GetPortals()</c> on a client returns whatever happens to be
+    /// the ZDOs near it, so <c>ZDOMan.GetPortalList()</c> on a client returns whatever happens to be
     /// loaded — never the world. Only the server has the full set, so the server builds the list and
     /// pushes it; clients only ever read what they were sent. See DESIGN.md §6.
     /// </para>
@@ -173,8 +173,12 @@ namespace Stavebound.Portals
             SweepBuffer.Clear();
             SweepPids.Clear();
 
-            // The live list, not a copy — read it, never mutate it (DESIGN.md §12).
-            List<ZDO> portals = ZDOMan.instance?.GetPortals();
+            // Game 1.0 buckets portal ZDOs by sector — GetPortals() now hands back a
+            // Dictionary<SectorIndex, List<ZDO>>. GetPortalList() flattens that, and unlike the old
+            // GetPortals() it allocates a fresh list per call rather than exposing the live one. A
+            // few hundred references every couple of seconds is nothing beside the diff below, and
+            // it removes the old hazard of mutating the game's own collection.
+            List<ZDO> portals = ZDOMan.instance?.GetPortalList();
             if (portals == null)
             {
                 return false;
