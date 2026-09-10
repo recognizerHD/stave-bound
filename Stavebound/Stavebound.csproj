@@ -8,7 +8,7 @@
     <RootNamespace>Stavebound</RootNamespace>
     <AssemblyName>Stavebound</AssemblyName>
     <!-- Keep in step with Stavebound.BuildInfo.Version. -->
-    <Version>0.9.0</Version>
+    <Version>0.9.1</Version>
     <LangVersion>10</LangVersion>
     <Deterministic>true</Deterministic>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -46,7 +46,7 @@
     and none of it is redistributed with the build.
   -->
   <ItemGroup>
-    <PackageReference Include="JotunnLib" Version="2.29.2" />
+    <PackageReference Include="JotunnLib" Version="2.30.0" />
   </ItemGroup>
 
   <!--

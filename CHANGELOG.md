@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.1 — 2026-09-10
+
+**Valheim 1.0 compatibility. 0.9.0 does not run on 1.0 — update.**
+
+Two things the game moved out from under the mod. The inventory grid's slot type
+was promoted out of `InventoryGrid` and its position field became a property,
+which the cargo overlay reads. And portal ZDOs are now bucketed by sector, so the
+call the server sweeps use to list every portal returns a dictionary rather than
+a list — there is a new one with the old shape, and the sweeps use it.
+
+**Jotunn 2.30.0 is now required**, since 2.29.2 predates 1.0.
+
+One known rough edge, and it is upstream rather than here: Jotunn has not yet
+ported piece categories to 1.0's rebuilt build menu, so the six staves appear in
+the hammer but are not filed under Misc. They are still buildable.
+
+Everything else came through 1.0 unchanged — every patch target, every private
+field read, and the teleport timing seamless transit depends on were all checked
+against the new assembly rather than assumed.
+
 ## 0.9.0 — 2026-09-06
 
 First release. Both features have been played in single player and confirmed on a

@@ -9,7 +9,26 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Balance — wants sessions, not checklists
+## 1. Valheim 1.0 — compiles, not yet run
+
+The assembly was re-read in full and the two breaks 1.0 caused are fixed (DESIGN.md §12). What that
+cannot tell us is anything that only exists at runtime, so all of this is still open:
+
+- [ ] **It loads at all.** Jotunn 2.30.0 on Valheim 1.0, with the mod alongside it
+- [ ] **`stave_prefabs corestand`** — the six staves clone `Pickable_BlackCoreStand`. If 1.0 renamed
+      or removed it, every piece fails to register and the mod is decorative
+- [ ] **`stave_items`** — the tier map read 26 blocked items on 0.221.12. 1.0 will likely differ.
+      Anything new is held to the highest tier and logged by name; those names then want adding to the
+      right `*Items` config list
+- [ ] **Piece categories.** Jotunn 2.30.0 has not ported them to 1.0's overhauled system, so the staves
+      should appear in the hammer menu but *not* under `Misc`. Confirm they appear at all — that is the
+      part that matters
+- [ ] **The cargo overlay**, which is the code that broke. `InventoryElement.Position` replaced
+      `m_pos`, so a wrong slot index would mark the wrong stack rather than crash
+- [ ] **The sweeps**, which are the other code that broke. `stave_portals` should list what it always
+      did; an empty list means `GetPortalList()` is not returning what `GetPortals()` used to
+
+## 2. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -23,20 +42,16 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 2. Standing gaps
+## 3. Standing gaps
 
 Smaller, older, and none of them blocking.
 
 - [ ] Gamepad navigation of the selector has been exercised far less than keyboard
-- [ ] The `ObjectDB` tier map has only been read on game 0.221.12. A game update adding a blocked item
-      should surface as an "unclassified" warning naming the prefab, and that path has never fired for
-      real
 - [ ] Conflict detection warns by GUID and has never been run against an actually-installed
       conflicting mod
 - [ ] Seamless transit has been played, but not with a client whose destination is unloaded **on a
       server** — the case it exists for. The single-machine case is covered
 
----
 
 ## Confirmed
 

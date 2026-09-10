@@ -71,7 +71,7 @@ reaches. Those are answered from inside a running game, and the answers echo to 
 | | |
 |---|---|
 | BepInEx | 5 (HarmonyX / `0Harmony` comes with it) |
-| [Jotunn](https://github.com/Valheim-Modding/Jotunn) | `JotunnLib` 2.29.2 — pieces, localisation, config sync, and the game/BepInEx reference set |
+| [Jotunn](https://github.com/Valheim-Modding/Jotunn) | `JotunnLib` 2.30.0 — pieces, localisation, config sync, and the game/BepInEx reference set |
 | Target framework | `net48` |
 | Publicising | Jotunn's own prebuild task. `BepInEx.AssemblyPublicizer.MSBuild` is **not** needed |
 

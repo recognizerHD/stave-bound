@@ -134,7 +134,7 @@ DESIGN.md  CLAUDE.md  README.md  BUILDING.md  CHANGELOG.md  LICENSE
 
 Confirmed against the Jotunn NuGet package and the JotunnModStub template, not guessed:
 
-- **`JotunnLib` 2.29.2**, target framework **`net48`**, `LangVersion` 10.
+- **`JotunnLib` 2.30.0** (2.29.2 predates Valheim 1.0), target framework **`net48`**, `LangVersion` 10.
 - Jotunn's package supplies *every* reference — publicised game assemblies, BepInEx, `0Harmony`,
   all UnityEngine modules. Do not add game or BepInEx `<Reference>` entries by hand.
 - **`BepInEx.AssemblyPublicizer.MSBuild` is not used.** Jotunn's own prebuild task publicises and

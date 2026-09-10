@@ -552,8 +552,39 @@ off the shipped assemblies; the second half still hasn't.
 
 ### Verified
 
-Read from `assembly_valheim.dll` at game build **5.4.23.2+3** (Aug 2026) with Mono.Cecil. Anything
-below is what the game actually contains, not what the spec assumed.
+Read from `assembly_valheim.dll` with Mono.Cecil — originally at game build **5.4.23.2+3** (Aug 2026),
+and **re-read in full against Valheim 1.0 (Sept 2026)**. Anything below is what the game actually
+contains, not what the spec assumed.
+
+#### What Valheim 1.0 changed
+
+Two breaks, both found by the compiler rather than in play, and both in code that runs constantly:
+
+| Was | Is now |
+|---|---|
+| `InventoryGrid.Element` (nested), with an `m_pos` field | Top-level **`InventoryElement`**, with a public **`Position`** property |
+| `ZDOMan.GetPortals()` returning `List<ZDO>` | Returns `Dictionary<ZoneSystem.SectorIndex, List<ZDO>>`; **`GetPortalList()`** has the old shape |
+
+`GetPortalList()` is not a drop-in twin of the old `GetPortals()`: it allocates a fresh flattened list
+per call rather than exposing the live one. That removes the old hazard of mutating the game's own
+collection, at the cost of a small allocation on each sweep.
+
+Everything else the mod touches survived unchanged, and this was checked rather than assumed — every
+Harmony target (`UpdateGui`, `Game.OnDestroy`, `Minimap.Update`, `ObjectDB.Awake`,
+`UpdatePlacementGhost`, `UpdatePortal`, `HaveTarget`, `TargetFound`, `UpdateTeleport`) and every
+injected private field (`m_nview`, `m_inventory`, `m_elements`, `m_placementGhost`, `m_teleporting`,
+`m_teleportTargetPos`, `m_teleportTimer`, `m_distantTeleport`). The string-named patches and the
+`___field` injections are the ones worth re-checking on any future update: neither is compile-checked,
+so both fail at patch time rather than build time.
+
+The IL that §7's seamless transit depends on is also intact — the eight-second gate, the
+`m_distantTeleport` test and the `IsAreaReady` call still appear in that order, with the two-second
+pause and fifteen-second timeout unchanged.
+
+**Jotunn 2.30.0 is required** from here on; 2.29.2 predates 1.0. One upstream limitation comes with it,
+and it is visible in game: Jotunn has not ported piece *categories* to 1.0's overhauled system, so the
+six staves appear in the hammer menu without sitting under `Misc` as `PieceConfig.Category` asks. Not
+ours to fix.
 
 **`TeleportWorld`** — fields `m_activationRange`, `m_exitDistance`, `m_allowAllItems`, `m_proximityRoot`;
 methods `GetHoverText()`, `GetHoverName()`, `Interact(Humanoid, bool, bool)`, `UseItem(Humanoid, ItemData)`,
