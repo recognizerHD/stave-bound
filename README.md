@@ -23,8 +23,9 @@ the portal gets you the reason in words.
 
 ## Installing
 
-Needs **BepInEx** and **Jotunn**. If you are using a mod manager both come as dependencies and there
-is nothing else to do. By hand, drop `Stavebound.dll` into `BepInEx/plugins`.
+Built for **Valheim 1.0** and needs **Jotunn 2.30.0** or newer — earlier Jotunn predates the game's
+1.0 release. With a mod manager both it and BepInEx arrive as dependencies and there is nothing else
+to do; by hand, drop `Stavebound.dll` into `BepInEx/plugins`.
 
 **Install it on the server and on every client.** The server works out clearance; clients need the
 map selector and the travel check. Clearance rules synchronise from the server, so nobody can loosen

@@ -9,29 +9,7 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Valheim 1.0 — build-menu filing
-
-The staves now set `m_usage = Transport` so they sit under Transportation beside the portals they
-serve. The up-arrow and the pieces appearing at all are already confirmed by screenshot.
-
-- [ ] The six staves appear under **Transportation** in the build menu, not only under "Show All"
-
-## 2. Sealed resources
-
-The Deep North's Bloodgold and Petrified Tissue (`Gold`, `GoldOre`) are now `Clearance.Sealed` — a
-tier no stave grants. See DESIGN.md §4.
-
-- [ ] Carrying Bloodgold, a normal portal refuses it and says *"only a stone portal will carry it"* —
-      **not** "no Ashen Stave there", which is the message this replaced
-- [ ] Building an Ashen Stave does **not** make it pass
-- [ ] A stone portal still carries it, unchanged. That path never touched this mod: `m_allowAllItems`
-      bypasses the gate entirely
-- [ ] The inventory overlay marks it at any portal, since no destination can take it
-- [ ] No chip for it appears in the selector, and `StrictLadder` is unaffected — `Sealed` is not on
-      the ladder
-- [ ] The startup warning about unclassified items is gone
-
-## 3. Balance — wants sessions, not checklists
+## 1. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -45,7 +23,7 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 4. Standing gaps
+## 2. Standing gaps
 
 Smaller, older, and none of them blocking.
 
@@ -67,12 +45,32 @@ top-level `InventoryElement` with a `Position` property in place of `m_pos`, and
 started returning a dictionary bucketed by sector, with `GetPortalList()` carrying the old shape. Both
 are in code that runs constantly. See DESIGN.md §12 for the full re-verification.
 
-Confirmed in game on 0.9.1 with Jotunn 2.30.0: pieces register, the sweeps mint pids and re-aim
+Confirmed in game on Jotunn 2.30.0: pieces register, the sweeps mint pids and re-aim
 portals, `SiteSweep` writes masks ("now Elder", then "Elder + Bonemass"), the selector opens, and the
 cargo overlay marks the right stacks. No Harmony patch failed to apply.
 
 The tier map grew from 26 blocked items across 1084 in `ObjectDB` to **28 across 1520**, which is the
 Deep North arriving.
+
+### The 1.0 build menu — passed
+
+1.0 rebuilt the build menu and Jotunn 2.30.0 has not ported categories to it, so `PieceConfig.Category`
+is ignored and the staves landed nowhere but "Show All". The mod now sets the piece's own fields on
+`PieceManager.OnPiecesRegistered`, after Jotunn has finished applying the config it would otherwise
+overwrite them with.
+
+Confirmed: the six staves sit under **Transportation** and carry the up-arrow.
+
+The trap worth remembering is that 1.0 has **two** category systems — the old `Piece.m_category`
+(`PieceCategory`, nine entries, no transport) and the new `Piece.m_usage` (`UsageTagFlags`, twenty,
+including `Transport`) which is the one the player sees. Checking the first and concluding there was
+no transport category cost a round trip here. See DESIGN.md §12.
+
+### Sealed resources — passed
+
+Bloodgold and Petrified Tissue are `Clearance.Sealed`, a tier no stave grants. Confirmed: a normal
+portal refuses them and says only a stone portal will carry them, an Ashen Stave does not change that,
+and the stone portal is unaffected — `m_allowAllItems` bypasses the gate entirely.
 
 ### Clearance across a real network — passed
 

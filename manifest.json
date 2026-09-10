@@ -1,6 +1,6 @@
 {
   "name": "Stavebound",
-  "version_number": "0.9.1",
+  "version_number": "1.0.0",
   "website_url": "https://github.com/recognizerHD/stave-bound",
   "description": "Travel to any portal off the map. What you may carry through is decided by the staves standing at the far end.",
   "dependencies": [

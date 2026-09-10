@@ -1,8 +1,13 @@
 # Changelog
 
-## 0.9.1 — 2026-09-10
+## 1.0.0 — 2026-09-10
 
 **Valheim 1.0 compatibility. 0.9.0 does not run on 1.0 — update.**
+
+Numbered 1.0.0 because it has now been played on a real network and on the game's
+own 1.0 release, and nothing in it is known to be wrong. The costs in the ladder
+still have not been tuned over a long game — that is a dial, not a defect, and
+every one of them is config.
 
 Two things the game moved out from under the mod. The inventory grid's slot type
 was promoted out of `InventoryGrid` and its position field became a property,
@@ -19,7 +24,7 @@ selling them back to you for a Fader trophy. The refusal says so in its own
 words rather than naming a stave that would not have helped. `SealedItems` is
 config if you disagree, and a stone portal is unaffected either way.
 
-**The staves are filed under Misc** in the build menu and carry the up-arrow
+**The staves are filed under Transportation** in the build menu and carry the up-arrow
 vanilla puts on upgrades. On 1.0 they were appearing only under "show all".
 
 The categories are worked around rather than fixed upstream: Jotunn has not yet
