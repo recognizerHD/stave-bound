@@ -27,6 +27,7 @@ namespace Stavebound.Config
         // -- Travel and refusals -----------------------------------------------------------------
 
         internal const string Refusal = "stave_refusal";
+        internal const string RefusalSealed = "stave_refusal_sealed";
         internal const string RefusalMore = "stave_refusal_more";
         internal const string ThatPortal = "stave_that_portal";
         internal const string TargetGone = "stave_target_gone";
@@ -88,6 +89,11 @@ namespace Stavebound.Config
         private static readonly Dictionary<string, string> English = new Dictionary<string, string>
         {
             { Refusal, "{0} cannot enter {1} — no {2} there." },
+
+            // Deliberately names no stave and no destination. Both would be a lie: there is no rune
+            // that carries a sealed resource and nowhere it could be taken, so a message shaped like
+            // the one above would send a player off to build something that changes nothing.
+            { RefusalSealed, "{0} cannot travel by portal — only a stone portal will carry it." },
             { RefusalMore, " (and {0} more.)" },
             { ThatPortal, "that portal" },
             { TargetGone, "This portal points at somewhere that no longer exists." },

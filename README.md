@@ -96,9 +96,15 @@ playable on a pad.
 | `StaveRadius` | How far a stave reaches for its portal. Ten metres by default |
 | `PortalBinding` | Whether a stave binds to the nearest portal or every portal in range |
 | `StrictLadder` | Off by default. On, a site's clearance stops at its first missing rung |
+| `SealedItems` | Resources no stave will ever carry. Bloodgold and Petrified Tissue by default |
 | `SeamlessTransit` | Off by default. Ends a trip when the destination has loaded rather than on vanilla's eight-second timer — a destination already in memory skips the loading screen entirely |
 | `ShowBlockedCargoOverlay` | Marks the stacks a nearby portal's destination will refuse |
 | `HidePortalNames` | Hides names in the selector, if you would rather navigate by the map |
+
+Two resources are **sealed**: the Deep North's Bloodgold and Petrified Tissue. No stave carries them
+and none ever will — the base game moves those by stone portal and nothing else, and this mod leaves
+that alone rather than selling them back to you for a trophy. `SealedItems` decides which, if you
+disagree.
 
 Which item belongs to which stave is configurable too, under `2 - Clearance`. The list of blocked
 items is never hand-written — it is read from the game at startup, so a game update adding a new ore

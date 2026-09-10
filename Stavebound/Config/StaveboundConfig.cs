@@ -146,6 +146,7 @@ namespace Stavebound.Config
         internal static ConfigEntry<string> YagluthItems { get; private set; }
         internal static ConfigEntry<string> QueenItems { get; private set; }
         internal static ConfigEntry<string> AshenItems { get; private set; }
+        internal static ConfigEntry<string> SealedItems { get; private set; }
 
         /// <summary>The tier lists, paired with the tier they grant. Read by <c>TierMap</c>.</summary>
         internal static IEnumerable<KeyValuePair<Clearance, string>> TierPrefabs()
@@ -156,6 +157,11 @@ namespace Stavebound.Config
             yield return new KeyValuePair<Clearance, string>(Clearance.Yagluth, YagluthItems.Value);
             yield return new KeyValuePair<Clearance, string>(Clearance.Queen, QueenItems.Value);
             yield return new KeyValuePair<Clearance, string>(Clearance.Ashen, AshenItems.Value);
+
+            // Last, so that a prefab listed both here and in a tier list ends up sealed. Sealing
+            // is the more conservative of the two readings, and matches how an unrecognised item
+            // is treated: when the config contradicts itself, refuse rather than permit.
+            yield return new KeyValuePair<Clearance, string>(Clearance.Sealed, SealedItems.Value);
         }
 
         // -- Cargo preview ---------------------------------------------------------------------
@@ -273,12 +279,22 @@ namespace Stavebound.Config
             AshenItems = config.Bind(
                 SectionClearance,
                 "AshenItems",
-                "FlametalOre,Flametal,FlametalOreNew,FlametalNew,CharredCogwheel,Gold,GoldOre",
+                "FlametalOre,Flametal,FlametalOreNew,FlametalNew,CharredCogwheel",
                 Synced("Blocked items an Ashen Stave permits. Comma-separated prefab names. " +
-                       "Anything blocked and unlisted lands here anyway, by design. Gold and GoldOre " +
-                       "are the Deep North's Bloodgold and Petrified Tissue: game 1.0 gave that biome " +
-                       "no summoning stone, so there is no farmable trophy to buy a stave of its own " +
-                       "with, and its metals ride on Fader's instead. See DESIGN.md section 4."));
+                       "Anything blocked and unlisted lands here anyway, by design."));
+
+            SealedItems = config.Bind(
+                SectionClearance,
+                "SealedItems",
+                "Gold,GoldOre",
+                Synced("Blocked items no stave will ever carry, whatever a site has built. " +
+                       "Comma-separated prefab names. The default is the Deep North's Bloodgold and " +
+                       "Petrified Tissue (Gold and GoldOre), which the base game moves by stone " +
+                       "portal and nothing else - listing them here leaves that exactly as vanilla " +
+                       "has it rather than handing them to the Ashen Stave. Emptying this makes " +
+                       "everything buyable with some rune; adding to it walls a resource off " +
+                       "entirely. Portals flagged to allow all items still carry these, because that " +
+                       "flag bypasses this mod completely."));
 
             // -- Cargo preview -----------------------------------------------------------------
 

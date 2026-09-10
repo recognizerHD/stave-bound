@@ -41,6 +41,26 @@ namespace Stavebound.Tiers
 
         /// <summary>Ashen Stave — flametal, and whatever else the Ashlands blocks.</summary>
         Ashen = 1 << 5,
+
+        /// <summary>
+        /// No stave carries this, and none ever will — the Deep North's Bloodgold and Petrified
+        /// Tissue.
+        /// <para>
+        /// <b>Not a rung.</b> It is absent from <see cref="ClearanceExtensions.Ladder"/> and
+        /// <see cref="ClearanceExtensions.All"/> deliberately, so no site can hold it, no chip shows
+        /// it, and <c>StrictLadder</c> never counts it. Because a mask is built only from staves
+        /// standing in the world, and no stave grants this, <c>Permits</c> answers false everywhere,
+        /// forever.
+        /// </para>
+        /// <para>
+        /// What that amounts to is <em>leaving vanilla alone</em>. The game already refuses to
+        /// teleport these; every other tier is this mod handing back something vanilla withheld, and
+        /// this one declines to. The stone portal remains the way to move them, which is what the
+        /// base game intends — and it works without our help, because a portal with
+        /// <c>m_allowAllItems</c> bypasses the gate entirely (see TeleportWorldPatches).
+        /// </para>
+        /// </summary>
+        Sealed = 1 << 6,
     }
 
     internal static class ClearanceExtensions

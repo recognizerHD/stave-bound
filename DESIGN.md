@@ -123,12 +123,30 @@ stave at *every* site you want to receive at. A boss with no summoning stone yie
 a seventh stave would be buildable exactly once, ever — and R2's per-site model would collapse for
 that tier alone. A rung you can only ever place at one site is not a rung; it is a trophy shelf.
 
-So Bloodgold and Petrified Tissue ride on the **Ashen Stave**, which is where the unlisted-item default
-was already putting them. Deep North follows the Ashlands, so gating its metals behind Fader is one
-tier early rather than wrong, and it is a config line for anyone who disagrees.
+The first answer was to let them ride on the **Ashen Stave**, which is where the unlisted-item default
+was already putting them. Played, that turned out to be wrong twice over.
 
-Revisit this if Iron Gate ever adds a summoning stone for that boss. Nothing else about the design
-would need to move: `Clearance` is a `[Flags]` enum, so `DeepNorth = 1<<6` is additive and renumbers
+It hands the player something the base game withheld — every other tier is this mod giving back a
+resource vanilla blocks, justified by a boss you beat and a haul you made; there is no such boss here,
+so Fader's trophy would be buying the Deep North's goods. And it produces a **refusal that lies**:
+*"Bloodgold cannot enter X — no Ashen Stave there"* sends a player off to build a rune, and the rune
+does not deserve to work.
+
+So they are **sealed** instead: `Clearance.Sealed`, a tier no stave grants and none ever will. It is
+absent from the ladder, so no site holds it, no chip shows it and `StrictLadder` never counts it.
+
+The honest description of that is **leaving vanilla alone**. The game already refuses to teleport
+these, and the stone portal is its own answer for moving them. Every other tier is the mod handing
+back something the game withheld; this one declines to, and says so in its own words — *"Bloodgold
+cannot travel by portal — only a stone portal will carry it"* — naming no stave and no destination,
+because neither is the problem and neither is the fix.
+
+Nothing special is needed to make the stone portal work: a portal with `m_allowAllItems` bypasses the
+gate entirely, which the mod has always honoured (§12).
+
+`SealedItems` is config, so a server that wants Bloodgold on the ladder can empty it, and one that
+wants another resource walled off can add to it. Revisit if Iron Gate ever gives that boss a summoning
+stone — `Clearance` is a `[Flags]` enum, so a real `DeepNorth` rung would be additive and renumber
 nothing.
 
 ### The Mistlands does have blocked resources

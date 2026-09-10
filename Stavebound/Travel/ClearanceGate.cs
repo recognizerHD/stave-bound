@@ -171,12 +171,25 @@ namespace Stavebound.Travel
         /// </summary>
         internal static string Explain(Refusal refusal, string destinationName)
         {
-            string place = string.IsNullOrEmpty(destinationName)
-                ? Translations.Get(Translations.ThatPortal)
-                : $"\"{destinationName}\"";
+            string message;
 
-            string message = Translations.Format(
-                Translations.Refusal, refusal.Item, place, refusal.Missing.StaveName());
+            if (refusal.Missing == Clearance.Sealed)
+            {
+                // Naming a stave here would be worse than saying nothing: none carries this, so the
+                // usual phrasing sends the player off to build something that will not help. Naming
+                // the destination would mislead too — no destination is the problem, and no other
+                // destination is the answer.
+                message = Translations.Format(Translations.RefusalSealed, refusal.Item);
+            }
+            else
+            {
+                string place = string.IsNullOrEmpty(destinationName)
+                    ? Translations.Get(Translations.ThatPortal)
+                    : $"\"{destinationName}\"";
+
+                message = Translations.Format(
+                    Translations.Refusal, refusal.Item, place, refusal.Missing.StaveName());
+            }
 
             if (refusal.OtherStacks > 0)
             {

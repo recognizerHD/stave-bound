@@ -12,9 +12,19 @@ a list — there is a new one with the old shape, and the sweeps use it.
 
 **Jotunn 2.30.0 is now required**, since 2.29.2 predates 1.0.
 
-One known rough edge, and it is upstream rather than here: Jotunn has not yet
-ported piece categories to 1.0's rebuilt build menu, so the six staves appear in
-the hammer but are not filed under Misc. They are still buildable.
+**The Deep North's metals are sealed.** Bloodgold and Petrified Tissue cannot
+travel by portal at all, whatever a site has built — the base game moves those
+by stone portal and nothing else, and this mod now leaves that alone instead of
+selling them back to you for a Fader trophy. The refusal says so in its own
+words rather than naming a stave that would not have helped. `SealedItems` is
+config if you disagree, and a stone portal is unaffected either way.
+
+**The staves are filed under Misc** in the build menu and carry the up-arrow
+vanilla puts on upgrades. On 1.0 they were appearing only under "show all".
+
+The categories are worked around rather than fixed upstream: Jotunn has not yet
+ported them to 1.0's rebuilt build menu, so the mod sets each piece's category
+itself once Jotunn is done registering.
 
 Everything else came through 1.0 unchanged — every patch target, every private
 field read, and the teleport timing seamless transit depends on were all checked

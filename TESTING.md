@@ -20,14 +20,20 @@ fix: the staves are filed under `Misc` and marked as upgrades by setting `Piece.
 - [ ] They are still buildable, and building one still binds it to a portal — `m_isUpgrade` is read by
       `BuildUiPieceButton.Setup` for the arrow, but nothing proves it is read *only* there
 
-## 2. The Deep North — settled, no seventh stave
+## 2. Sealed resources
 
-1.0's `Gold` and `GoldOre` are the Deep North's Bloodgold and Petrified Tissue. They now sit in
-`AshenItems` explicitly rather than arriving there as the unlisted-item default, because that biome's
-boss has no summoning stone and so no farmable trophy — see DESIGN.md §4 for why that is an R5 problem
-rather than an R4 one.
+The Deep North's Bloodgold and Petrified Tissue (`Gold`, `GoldOre`) are now `Clearance.Sealed` — a
+tier no stave grants. See DESIGN.md §4.
 
-- [ ] Confirm the startup warning about unclassified items is gone
+- [ ] Carrying Bloodgold, a normal portal refuses it and says *"only a stone portal will carry it"* —
+      **not** "no Ashen Stave there", which is the message this replaced
+- [ ] Building an Ashen Stave does **not** make it pass
+- [ ] A stone portal still carries it, unchanged. That path never touched this mod: `m_allowAllItems`
+      bypasses the gate entirely
+- [ ] The inventory overlay marks it at any portal, since no destination can take it
+- [ ] No chip for it appears in the selector, and `StrictLadder` is unaffected — `Sealed` is not on
+      the ladder
+- [ ] The startup warning about unclassified items is gone
 
 ## 3. Balance — wants sessions, not checklists
 
