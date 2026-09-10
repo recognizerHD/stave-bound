@@ -3,15 +3,15 @@
 > A Valheim mod. Travel to any portal by name; what you may **carry** through is decided by the
 > staves standing at the **destination**, and every stave is bought with a boss trophy.
 
-Status: **Draft 5. Phases 1 to 4 are built and played.** Any-portal travel, clearance decided by the
-destination, the feedback that explains both, and optional seamless transit. Everything in the build
-order below is implemented and has been exercised in game.
+Status: **Draft 6. Built, played, and confirmed on a real network.** Any-portal travel, clearance,
+the feedback that explains both, and optional seamless transit. Everything in the build order below is
+implemented and has been exercised in game, including across two machines.
 
-One thing stands between that and a release, and it is not a feature: clearance has never crossed a
-real network. The registry sync was proven on two machines before masks existed, so no client has yet
-received a non-zero one.
+Running on game **1.0** — see §12 for what that release moved and what it did not.
 
-The costs in §4 are settled — see §10, where the balance question turned out to be framed backwards.
+What is left is judgement rather than correctness: the costs in §4 have never been tuned over a long
+game, and whether `MaterialFlow.Both` is the right shipped default is an open question. See §10, and
+`TESTING.md` for the rest.
 
 ---
 
@@ -21,16 +21,17 @@ Two features, one system.
 
 1. **Any-portal travel.** Interact with a portal, pick any portal in the world off the map, and it
    points there — for everyone — until someone re-aims it. Walking in travels.
-2. **Destination clearance.** Each portal site has a clearance mask built out of physical
-   staves. When you travel, the game checks the mask of the portal you are *arriving at* against
-   what you are carrying.
+2. **Site clearance.** Each portal site has a clearance mask built out of physical staves. When you
+   travel, the game checks what you are carrying against it — `MaterialFlow` (R3) deciding whether
+   the mask asked for is the destination's, the departure portal's, or either.
 
-The second one is the reason the mod exists. Build an Elder's Stave at your base and from then
-on *every* portal in the world can send copper, tin and bronze **to** your base — and none of them
-can receive it back until you go build a stave there too.
+The second one is the reason the mod exists. Build an Elder's Stave at your base and copper, tin and
+bronze can reach it from anywhere in the world.
 
-That asymmetry is the whole design: **ore flows inward** toward places you have invested in, and
-outposts stay cheap, disposable and one-way.
+Set `MaterialFlow` to `Receive` and nothing carries them *back* until you go and build a stave there
+too. That asymmetry — **ore flows inward**, toward places you have invested in, leaving outposts
+cheap, disposable and one-way — is what the design was built around, and it is one setting away under
+any of the three.
 
 ### Words, used precisely
 
