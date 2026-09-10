@@ -166,6 +166,53 @@ namespace Stavebound.Staves
         internal static void Register()
         {
             PrefabManager.OnVanillaPrefabsAvailable += Create;
+            PieceManager.OnPiecesRegistered += FileInTheBuildMenu;
+        }
+
+        /// <summary>
+        /// Puts the six staves in a build-menu category and marks them as upgrades.
+        /// <para>
+        /// Both are set straight on the <c>Piece</c> component rather than through
+        /// <see cref="PieceConfig.Category"/>, because Jotunn 2.30.0 has not ported categories to game
+        /// 1.0's rebuilt build menu — the config's category is ignored, and the staves turn up only
+        /// under "show all". <c>m_category</c> and <c>m_isUpgrade</c> are both public fields, so this
+        /// is not the private-member hazard DESIGN.md §12 warns about.
+        /// </para>
+        /// <para>
+        /// It runs on <c>OnPiecesRegistered</c> rather than after <c>AddPiece</c> because Jotunn
+        /// applies the <c>PieceConfig</c> during registration; anything set before that is overwritten
+        /// by the config we are working around. Setting it again once Jotunn fixes categories is
+        /// harmless — the value is the same one the config asks for.
+        /// </para>
+        /// <para>
+        /// <b>Misc, not Transportation.</b> 1.0's <c>Piece.PieceCategory</c> has no transportation
+        /// entry — the whole enum is Misc, Crafting, BuildingWorkbench, BuildingStonecutter,
+        /// Furniture, DeepNorth, Feasts, Food and Meads. Misc is where portals themselves live, which
+        /// is the intent behind wanting them filed with transport.
+        /// </para>
+        /// <para>
+        /// <c>m_isUpgrade</c> earns the up-arrow: <c>BuildUiPieceButton.Setup</c> reads it and
+        /// activates <c>m_upgradeArrow</c>. A stave is not an upgrade in vanilla's sense of extending
+        /// a crafting station, but it is one in the sense the arrow communicates — it makes a portal
+        /// that already exists do more.
+        /// </para>
+        /// </summary>
+        private static void FileInTheBuildMenu()
+        {
+            foreach (string name in Granted.Keys)
+            {
+                GameObject prefab = PrefabManager.Instance.GetPrefab(name);
+                var piece = prefab != null ? prefab.GetComponent<Piece>() : null;
+
+                if (piece == null)
+                {
+                    // CreateOne already logged whatever went wrong; nothing to add.
+                    continue;
+                }
+
+                piece.m_category = Piece.PieceCategory.Misc;
+                piece.m_isUpgrade = true;
+            }
         }
 
         private static void Create()

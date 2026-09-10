@@ -9,26 +9,26 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Valheim 1.0 — compiles, not yet run
+## 1. Valheim 1.0 — the build-menu changes
 
-The assembly was re-read in full and the two breaks 1.0 caused are fixed (DESIGN.md §12). What that
-cannot tell us is anything that only exists at runtime, so all of this is still open:
+Everything else about 1.0 is confirmed (see the record below). What is new and unrun is the build-menu
+fix: the staves are filed under `Misc` and marked as upgrades by setting `Piece.m_category` and
+`Piece.m_isUpgrade` directly, because Jotunn 2.30.0 ignores `PieceConfig.Category` on 1.0.
 
-- [ ] **It loads at all.** Jotunn 2.30.0 on Valheim 1.0, with the mod alongside it
-- [ ] **`stave_prefabs corestand`** — the six staves clone `Pickable_BlackCoreStand`. If 1.0 renamed
-      or removed it, every piece fails to register and the mod is decorative
-- [ ] **`stave_items`** — the tier map read 26 blocked items on 0.221.12. 1.0 will likely differ.
-      Anything new is held to the highest tier and logged by name; those names then want adding to the
-      right `*Items` config list
-- [ ] **Piece categories.** Jotunn 2.30.0 has not ported them to 1.0's overhauled system, so the staves
-      should appear in the hammer menu but *not* under `Misc`. Confirm they appear at all — that is the
-      part that matters
-- [ ] **The cargo overlay**, which is the code that broke. `InventoryElement.Position` replaced
-      `m_pos`, so a wrong slot index would mark the wrong stack rather than crash
-- [ ] **The sweeps**, which are the other code that broke. `stave_portals` should list what it always
-      did; an empty list means `GetPortalList()` is not returning what `GetPortals()` used to
+- [ ] The six staves appear under **Misc** in the hammer, not only under "show all"
+- [ ] Each shows the **up-arrow** overlay that vanilla puts on workbench upgrades
+- [ ] They are still buildable, and building one still binds it to a portal — `m_isUpgrade` is read by
+      `BuildUiPieceButton.Setup` for the arrow, but nothing proves it is read *only* there
 
-## 2. Balance — wants sessions, not checklists
+## 2. The Deep North
+
+1.0 implemented the Deep North, and the tier map now reports **28** blocked items where 0.221.12 had
+26. The two new ones are `Gold` and `GoldOre`, currently falling through to Ashen by default.
+
+- [ ] Confirm the Deep North boss's trophy prefab name — `stave_prefabs trophy`
+- [ ] Decide: a seventh stave, or gold folded into an existing tier. See DESIGN.md §4
+
+## 3. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -42,7 +42,7 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 3. Standing gaps
+## 4. Standing gaps
 
 Smaller, older, and none of them blocking.
 
@@ -56,6 +56,20 @@ Smaller, older, and none of them blocking.
 ## Confirmed
 
 Kept as a record of what the tests were, so a regression has something to be measured against.
+
+### Valheim 1.0 — passed
+
+The game's 1.0 release moved two things out from under the mod: `InventoryGrid.Element` became a
+top-level `InventoryElement` with a `Position` property in place of `m_pos`, and `ZDOMan.GetPortals()`
+started returning a dictionary bucketed by sector, with `GetPortalList()` carrying the old shape. Both
+are in code that runs constantly. See DESIGN.md §12 for the full re-verification.
+
+Confirmed in game on 0.9.1 with Jotunn 2.30.0: pieces register, the sweeps mint pids and re-aim
+portals, `SiteSweep` writes masks ("now Elder", then "Elder + Bonemass"), the selector opens, and the
+cargo overlay marks the right stacks. No Harmony patch failed to apply.
+
+The tier map grew from 26 blocked items across 1084 in `ObjectDB` to **28 across 1520**, which is the
+Deep North arriving.
 
 ### Clearance across a real network — passed
 
@@ -85,3 +99,44 @@ nowhere else.
 All five surfaces read one function, `ClearanceGate.EffectiveMask`, so any disagreement between the
 rune glow, the approach warning, the inventory marks, the selector verdict and what actually happens
 on walking in is a real bug rather than a cosmetic one.
+
+---
+
+## How to test a build from scratch
+
+The full pass, for when something big changes. Console commands go in Valheim's F5 console, not a
+shell. Launch the **dev profile**, make a **throwaway world** (r2modman does not isolate saves), and
+`devcommands`.
+
+**1. Did the patches apply?** Before judging anything in game, read the log. A `___field` injection
+that no longer matches fails at patch time, logs, and leaves everything else working — so it is
+invisible in play.
+
+```
+grep -iE "harmony|exception|failed to|error" "<profile>/BepInEx/LogOutput.log"
+```
+
+Expect `Loading [Stavebound <version>]` and six `Registered piece stave_*` lines.
+
+**2. Pieces registered.** Open the hammer, find the six staves. If they are missing entirely, the
+clone source is the suspect: `stave_prefabs corestand`.
+
+**3. The sweeps.** Spawn two portals (`spawn portal_wood 1`, twice), name both the same so they pair,
+then `stave_portals`. Both should be listed. An empty list means the registry is not seeing the
+world. Single player is enough — you are the server.
+
+**4. Stave binding.** `spawn TrophyTheElder 1`, `spawn Copper 10`, `spawn Stone 20`. Build the Elder's
+Stave within 10 m of a portal, wait ten seconds for the sweep, and run `stave_portals` again — that
+portal should show a non-zero clearance. This covers a different code path from step 3.
+
+**5. The cargo overlay.** `spawn Iron 5`, `spawn CopperOre 5`. Stand **at a portal that points
+somewhere** — the patch does nothing otherwise — and open your inventory. With only the Elder's Stave
+built, copper ore should be unmarked and iron marked. Testing with one of each matters: a wrong slot
+index marks the wrong stack rather than crashing, and a single item cannot tell you which happened.
+
+**6. The gate agrees.** Walk in carrying the iron: a refusal naming Bonemass's Stave. Drop it, carry
+the copper ore through: you travel. Overlay and gate both read `ClearanceGate.EffectiveMask`, so they
+must agree.
+
+**7. The item list.** `stave_items`. Anything the mod does not recognise is held to the highest tier
+and logged by name; those names want adding to the right `*Items` config list.
