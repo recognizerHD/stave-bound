@@ -9,16 +9,12 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Valheim 1.0 — the build-menu changes
+## 1. Valheim 1.0 — build-menu filing
 
-Everything else about 1.0 is confirmed (see the record below). What is new and unrun is the build-menu
-fix: the staves are filed under `Misc` and marked as upgrades by setting `Piece.m_category` and
-`Piece.m_isUpgrade` directly, because Jotunn 2.30.0 ignores `PieceConfig.Category` on 1.0.
+The staves now set `m_usage = Transport` so they sit under Transportation beside the portals they
+serve. The up-arrow and the pieces appearing at all are already confirmed by screenshot.
 
-- [ ] The six staves appear under **Misc** in the hammer, not only under "show all"
-- [ ] Each shows the **up-arrow** overlay that vanilla puts on workbench upgrades
-- [ ] They are still buildable, and building one still binds it to a portal — `m_isUpgrade` is read by
-      `BuildUiPieceButton.Setup` for the arrow, but nothing proves it is read *only* there
+- [ ] The six staves appear under **Transportation** in the build menu, not only under "Show All"
 
 ## 2. Sealed resources
 

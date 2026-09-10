@@ -625,10 +625,24 @@ The IL that §7's seamless transit depends on is also intact — the eight-secon
 `m_distantTeleport` test and the `IsAreaReady` call still appear in that order, with the two-second
 pause and fifteen-second timeout unchanged.
 
-**Jotunn 2.30.0 is required** from here on; 2.29.2 predates 1.0. One upstream limitation comes with it,
-and it is visible in game: Jotunn has not ported piece *categories* to 1.0's overhauled system, so the
-six staves appear in the hammer menu without sitting under `Misc` as `PieceConfig.Category` asks. Not
-ours to fix.
+**Jotunn 2.30.0 is required** from here on; 2.29.2 predates 1.0. It has not ported piece categories to
+1.0's rebuilt build menu, so `PieceConfig.Category` is ignored and the staves land nowhere. The mod
+sets them itself on `PieceManager.OnPiecesRegistered`.
+
+Doing that means knowing there are now **two** category systems, which is a trap worth recording:
+
+| | |
+|---|---|
+| `Piece.m_category` — `PieceCategory` | The old enum. Misc, Crafting, BuildingWorkbench, BuildingStonecutter, Furniture, DeepNorth, Feasts, Food, Meads. Still present, still read by `PieceTable.GetPiece` and friends |
+| `Piece.m_usage` — `UsageTagFlags` | **The one the player sees.** Drives the sidebar in 1.0's build menu: Misc, Crafting, Building, Floor, Wall, Roof, Architecture, Furniture, Lighting, Decor, Storage, **Transport**, Food, Meads, Feasts, Defense, Stacks, Stairs, Doors, Seasonal |
+
+Reading only the old enum leads to the confident and wrong conclusion that 1.0 has no transport
+category. It has one; it is on the other system. The staves set `m_usage = Transport`, filing them
+beside the portals they serve, and keep `m_category = Misc` because the old enum has no transport
+entry and its code paths still exist.
+
+`Piece.m_isUpgrade` earns the up-arrow overlay: `BuildUiPieceButton.Setup` reads it and activates
+`m_upgradeArrow`.
 
 **`TeleportWorld`** — fields `m_activationRange`, `m_exitDistance`, `m_allowAllItems`, `m_proximityRoot`;
 methods `GetHoverText()`, `GetHoverName()`, `Interact(Humanoid, bool, bool)`, `UseItem(Humanoid, ItemData)`,

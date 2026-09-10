@@ -185,10 +185,18 @@ namespace Stavebound.Staves
         /// harmless — the value is the same one the config asks for.
         /// </para>
         /// <para>
-        /// <b>Misc, not Transportation.</b> 1.0's <c>Piece.PieceCategory</c> has no transportation
-        /// entry — the whole enum is Misc, Crafting, BuildingWorkbench, BuildingStonecutter,
-        /// Furniture, DeepNorth, Feasts, Food and Meads. Misc is where portals themselves live, which
-        /// is the intent behind wanting them filed with transport.
+        /// <b>Two category systems, and the new one is the one on screen.</b> 1.0 kept the old
+        /// <c>Piece.PieceCategory</c> enum — Misc, Crafting, BuildingWorkbench, BuildingStonecutter,
+        /// Furniture, DeepNorth, Feasts, Food, Meads — and added <c>Piece.m_usage</c>, a
+        /// <c>UsageTagFlags</c> that drives the sidebar the player actually sees (Flooring, Walls,
+        /// Roofing, Architecture, Lighting, Decor, Storage, Transportation and the rest). Reading only
+        /// the old enum is how you conclude there is no transport category; there is, and it is
+        /// <c>UsageTagFlags.Transport</c>.
+        /// </para>
+        /// <para>
+        /// Both are set. <c>m_usage</c> files the staves beside the portals they serve, which is where
+        /// a player looks for them; <c>m_category</c> stays on Misc because the old enum has no
+        /// transport entry and the old code paths still exist.
         /// </para>
         /// <para>
         /// <c>m_isUpgrade</c> earns the up-arrow: <c>BuildUiPieceButton.Setup</c> reads it and
@@ -211,6 +219,7 @@ namespace Stavebound.Staves
                 }
 
                 piece.m_category = Piece.PieceCategory.Misc;
+                piece.m_usage = Piece.UsageTagFlags.Transport;
                 piece.m_isUpgrade = true;
             }
         }
