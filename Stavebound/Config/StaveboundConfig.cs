@@ -273,9 +273,12 @@ namespace Stavebound.Config
             AshenItems = config.Bind(
                 SectionClearance,
                 "AshenItems",
-                "FlametalOre,Flametal,FlametalOreNew,FlametalNew,CharredCogwheel",
+                "FlametalOre,Flametal,FlametalOreNew,FlametalNew,CharredCogwheel,Gold,GoldOre",
                 Synced("Blocked items an Ashen Stave permits. Comma-separated prefab names. " +
-                       "Anything blocked and unlisted lands here anyway, by design."));
+                       "Anything blocked and unlisted lands here anyway, by design. Gold and GoldOre " +
+                       "are the Deep North's Bloodgold and Petrified Tissue: game 1.0 gave that biome " +
+                       "no summoning stone, so there is no farmable trophy to buy a stave of its own " +
+                       "with, and its metals ride on Fader's instead. See DESIGN.md section 4."));
 
             // -- Cargo preview -----------------------------------------------------------------
 

@@ -105,6 +105,32 @@ errand before their stave works. Cutting it also collapses R2 from two relations
 | 5 | **Queen's Stave** | Queen trophy · 3 dvergr extractors · 20 stone | Dvergr extractors, mechanical springs | Added once the `ObjectDB` scan proved the Mistlands blocks resources — see below. The cost *is* the cargo: extractors are one of the things this rune unlocks, so three of them have to reach the site by boat and cart before any of them can ever come by portal. |
 | 6 | **Ashen Stave** | Fader trophy · 10 flametal · 20 stone | Flametal ore & bar, Ashlands blocked items | Fader alone, now the Queen has her own rune. |
 
+### Why the ladder stops at six, and the Deep North does not get a seventh
+
+Game 1.0 implemented the Deep North, and with it two blocked resources: `Gold` and `GoldOre` — which
+are not gold at all but **Bloodgold** and **Petrified Tissue**, the metal behind the Nord and Frostfire
+gear. By the shape of every other rung that is a seventh stave asking to be built.
+
+It cannot be built, and the reason is **R5 rather than R4**.
+
+The seven sacrificial boss stones in 1.0 are Eikthyr, The Elder, Bonemass, Moder, Yagluth, The Queen
+and Fader — the seven that already existed. The Deep North's boss has none. It sits behind
+`LastBossGate_RuneTile` and `BloodGoldKey`, a gate opened with collected items rather than an altar
+you re-summon at.
+
+R5 is what makes the ladder a cost curve instead of a wall: trophies are farmable, so you can afford a
+stave at *every* site you want to receive at. A boss with no summoning stone yields a trophy once, so
+a seventh stave would be buildable exactly once, ever — and R2's per-site model would collapse for
+that tier alone. A rung you can only ever place at one site is not a rung; it is a trophy shelf.
+
+So Bloodgold and Petrified Tissue ride on the **Ashen Stave**, which is where the unlisted-item default
+was already putting them. Deep North follows the Ashlands, so gating its metals behind Fader is one
+tier early rather than wrong, and it is a config line for anyone who disagrees.
+
+Revisit this if Iron Gate ever adds a summoning stone for that boss. Nothing else about the design
+would need to move: `Clearance` is a `[Flags]` enum, so `DeepNorth = 1<<6` is additive and renumbers
+nothing.
+
 ### The Mistlands does have blocked resources
 
 This document claimed it didn't, and used that to justify folding the Queen into the Ashen Stave.
