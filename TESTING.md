@@ -52,12 +52,17 @@ actions) while never changing position. It disappears once the observer teleport
 
 What is known so far:
 
-- The animation still updating means the observer **is** still receiving that player's updates. It is
-  only the *position* that never gets applied. That rules out the first theory, that the server simply
-  stopped sending updates once the player jumped out of range.
-- Position and animation sync separately in the game: position through `ZSyncTransform`, which carries
-  a position revision counter and can sync relative to a parent object, animation through its own
-  component. **The mod touches neither.**
+- **The animation still updating proves less than it seems.** An earlier note here said it ruled out
+  the obvious theory; it does not. `ZSyncAnimation.SetTrigger` sends emotes and actions as an RPC to
+  every peer regardless of distance, while position travels in the player's ZDO, which the server
+  only streams to peers nearby. So a body that keeps emoting is entirely consistent with the observer's
+  copy of that ZDO having gone stale.
+- **Leading theory:** the traveller jumps out of the observer's area, the server stops sending the
+  observer that ZDO, and the observer's last copy still places the player at the portal — so the game
+  never culls the instance, and broadcast animations keep playing on it. Teleporting away moves the
+  observer's own area, which is why that clears it.
+- Position syncs through `ZSyncTransform` and ZDO streaming, animation through `ZSyncAnimation`.
+  **The mod touches none of them.**
 - Both places Stavebound is in the teleport path were checked against the 1.0 assembly and match
   vanilla: the `TeleportWorld.Teleport` prefix transcribes 1.0's method call for call, and the flag
   seamless transit clears is read elsewhere only by the traveller's own loading screen.
