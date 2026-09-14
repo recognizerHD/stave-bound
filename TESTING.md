@@ -27,6 +27,17 @@ right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.3
 - [ ] **The keys still work** after clicking — a clicked button must not keep focus and swallow P, or
       turn the arrow keys into UI navigation
 - [ ] **A gamepad** still drives the whole thing, unchanged
+- [ ] **The mouse wheel over the list** moves the highlight one row per notch — up for a wheel rolled
+      away — and stops at either end rather than wrapping. **The map does not zoom** at the same time
+- [ ] **The wheel over the map**, away from the panel, still zooms the map exactly as vanilla
+- [ ] With the dropdown open, the wheel scrolls its list and the map does not zoom
+- [ ] On a trackpad, one swipe steps a handful of rows rather than racing to the end
+- [ ] **Hovering a row pans the map to it** without moving the highlight; sliding across several rows
+      follows the pointer without the map bouncing back between them; **leaving the list returns the
+      map to the highlighted destination**
+- [ ] **Clicking the map still highlights the nearest destination.** It now reads the pointer through
+      the game's own input rather than Unity's legacy one, which 1.0 moved away from — so this is both a
+      regression check and possibly the first time it has worked on 1.0 at all
 - [ ] Turn the cargo filter on while carrying something nothing accepts: the empty message shows,
       previous/next/confirm grey out, and **pressing confirm does nothing** rather than throwing. That
       last one was a real crash on the keys alone before this change, and so was stepping with the

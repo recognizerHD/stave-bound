@@ -37,8 +37,12 @@ namespace Stavebound.Patches
 
             // ScreenToWorldPoint is private, so it goes through Harmony rather than the publicised
             // signature, which would throw at runtime — see DESIGN.md §12.
+            //
+            // ZInput.pointerPosition rather than UnityEngine.Input.mousePosition: game 1.0 reads input
+            // through the Input System, and vanilla's own OnMapLeftClick takes the pointer from ZInput.
+            // The legacy call is not guaranteed to report anything under it.
             var world = (Vector3)AccessTools.Method(typeof(Minimap), "ScreenToWorldPoint")
-                .Invoke(__instance, new object[] { Input.mousePosition });
+                .Invoke(__instance, new object[] { ZInput.pointerPosition });
 
             DestinationSelector.HighlightNearest(world);
             return false;

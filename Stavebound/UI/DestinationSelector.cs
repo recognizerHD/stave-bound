@@ -101,6 +101,26 @@ namespace Stavebound.UI
         /// when the list itself changed rather than on every step through it.
         /// </summary>
         private static bool _pickerStale;
+
+        /// <summary>
+        /// The wheel as the game read it this frame, captured on its way to the map by
+        /// <c>SelectorWheelPatches</c>, and the frame it was read on.
+        /// </summary>
+        private static float _wheel;
+        private static int _wheelFrame = -1;
+        private static float _lastWheelStep;
+
+        /// <summary>
+        /// The shortest gap between two steps from the wheel. A notched wheel sends one reading per
+        /// click; a trackpad sends a stream of small ones, and without a floor a single swipe would
+        /// race the highlight to the end of the list. Being a time rather than an amount also means
+        /// it does not depend on how the game scales the reading, which it does.
+        /// </summary>
+        private const float WheelInterval = 0.06f;
+
+        /// <summary>The row under the pointer, if any, and whether the map is showing it instead of the highlight.</summary>
+        private static RowView _hovered;
+        private static bool _previewing;
         private static bool _updateSeen;
 
         /// <summary>
@@ -112,7 +132,7 @@ namespace Stavebound.UI
             AccessTools.FieldRefAccess<Dropdown, GameObject>("m_Blocker");
 
         /// <summary>One clickable line of the list, reused as the window scrolls.</summary>
-        private sealed class RowView
+        internal sealed class RowView
         {
             internal GameObject Root;
             internal Button Button;
@@ -231,6 +251,18 @@ namespace Stavebound.UI
                 Unfocus();
             }
 
+            // A hover preview ends when the pointer leaves the list, and the map goes back to the
+            // highlight. Checked here rather than in the exit handler, so sliding from one row to the
+            // next — an exit and an enter in the same event pass — never bounces the map in between.
+            if (_previewing && _hovered == null)
+            {
+                _previewing = false;
+                if (Candidates.Count > 0)
+                {
+                    Minimap.instance?.ShowPointOnMap(Candidates[_highlight].Position);
+                }
+            }
+
             if (Cancelled())
             {
                 Close();
@@ -259,6 +291,96 @@ namespace Stavebound.UI
             if (step != 0)
             {
                 Step(step);
+                return;
+            }
+
+            ScrollFromWheel();
+        }
+
+        /// <summary>
+        /// Whether the wheel belongs to the selector rather than the map this frame: while the pointer
+        /// is over the panel, or while the dropdown's list is open and scrolling itself.
+        /// </summary>
+        internal static bool OwnsWheel() => IsOpen && _panel != null && (PickerIsOpen() || PointerOverPanel());
+
+        internal static void ReceiveWheel(float delta)
+        {
+            _wheel = delta;
+            _wheelFrame = Time.frameCount;
+        }
+
+        /// <summary>
+        /// One step per notch, towards the top of the list for a wheel rolled away from you.
+        /// <para>
+        /// Clamped at either end, where the keys wrap. A wheel is rarely moved one notch at a time, and
+        /// rolling past the last row to land on the first is disorienting in a way that pressing a key
+        /// once too often is not.
+        /// </para>
+        /// </summary>
+        private static void ScrollFromWheel()
+        {
+            if (_wheelFrame != Time.frameCount || _wheel == 0f || Candidates.Count == 0)
+            {
+                return;
+            }
+
+            if (Time.unscaledTime - _lastWheelStep < WheelInterval || !PointerOverPanel())
+            {
+                return;
+            }
+
+            _lastWheelStep = Time.unscaledTime;
+
+            int next = Mathf.Clamp(_highlight + (_wheel > 0f ? -1 : 1), 0, Candidates.Count - 1);
+            if (next != _highlight)
+            {
+                _highlight = next;
+                ShowHighlight();
+            }
+        }
+
+        private static bool PointerOverPanel()
+        {
+            if (_panel == null)
+            {
+                return false;
+            }
+
+            Canvas canvas = _panel.GetComponentInParent<Canvas>();
+            Canvas root = canvas != null ? canvas.rootCanvas : null;
+            Camera camera = root == null || root.renderMode == RenderMode.ScreenSpaceOverlay ? null : root.worldCamera;
+
+            // The game's own pointer, not UnityEngine.Input: 1.0 reads input through the Input System,
+            // and the map's own click handler asks ZInput for the pointer for exactly that reason.
+            return RectTransformUtility.RectangleContainsScreenPoint(
+                _panel.GetComponent<RectTransform>(), ZInput.pointerPosition, camera);
+        }
+
+        /// <summary>
+        /// Pans the map to the row under the pointer without moving the highlight.
+        /// <para>
+        /// A preview, deliberately not a selection. Hovering is how a player looks, and looking should
+        /// not change what confirming would do; the map returns to the highlight when the pointer
+        /// leaves the list (see <see cref="Update"/>).
+        /// </para>
+        /// </summary>
+        internal static void HoverEntered(RowView row)
+        {
+            if (!IsOpen || row == null || row.Candidate < 0 || row.Candidate >= Candidates.Count)
+            {
+                return;
+            }
+
+            _hovered = row;
+            _previewing = true;
+            Minimap.instance?.ShowPointOnMap(Candidates[row.Candidate].Position);
+        }
+
+        internal static void HoverLeft(RowView row)
+        {
+            if (_hovered == row)
+            {
+                _hovered = null;
             }
         }
 
@@ -421,6 +543,8 @@ namespace Stavebound.UI
             _moreBelow = null;
             Rows.Clear();
             NeedsCandidates.Clear();
+            _hovered = null;
+            _previewing = false;
 
             Candidates.Clear();
 
@@ -497,6 +621,8 @@ namespace Stavebound.UI
                     row.Candidate = -1;
                 }
 
+                _hovered = null;
+
                 return;
             }
 
@@ -544,6 +670,11 @@ namespace Stavebound.UI
                 {
                     row.Root.SetActive(false);
                     row.Candidate = -1;
+                    if (_hovered == row)
+                    {
+                        _hovered = null;
+                    }
+
                     continue;
                 }
 
@@ -906,6 +1037,8 @@ namespace Stavebound.UI
                 Unfocus();
             });
 
+            root.AddComponent<SelectorRowHover>().Row = view;
+
             view.Name = CreateLabel(root.transform, 15, TextAnchor.MiddleLeft);
             RectTransform name = view.Name.rectTransform;
             name.anchorMin = Vector2.zero;
@@ -1015,5 +1148,19 @@ namespace Stavebound.UI
         private static bool Confirmed() => SelectorKeys.Pressed(SelectorKeys.Confirm);
 
         private static bool Cancelled() => SelectorKeys.Pressed(SelectorKeys.Cancel);
+    }
+
+    /// <summary>
+    /// Reports the pointer entering and leaving one row of the selector's list. A component of its own
+    /// rather than an <c>EventTrigger</c>, which implements every pointer interface and would quietly
+    /// sit in the path of events the row does not care about.
+    /// </summary>
+    internal sealed class SelectorRowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        internal DestinationSelector.RowView Row;
+
+        public void OnPointerEnter(PointerEventData eventData) => DestinationSelector.HoverEntered(Row);
+
+        public void OnPointerExit(PointerEventData eventData) => DestinationSelector.HoverLeft(Row);
     }
 }
