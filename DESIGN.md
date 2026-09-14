@@ -221,6 +221,16 @@ Moving the highlight moves both. That is why the interaction model is a highligh
 target — it costs nothing to add a second view of a highlight, and a great deal to reconcile two
 independent ones.
 
+That bet paid off when mouse input arrived. The list's rows are clickable, a dropdown above them lists
+every destination, and the footer's key hints are real buttons — and every one of those is just another
+way to move the *same* highlight, alongside the keys, the stick and a click on the map. None of them
+takes focus: navigation is off on every control and each click hands focus straight back, so the
+gamepad path is exactly what it was.
+
+**Highlighting never confirms**, whichever input did it. Only the confirm key or the Confirm button
+re-aims a portal. A re-aim changes everyone's route, possibly someone's mid-haul, so no stray click on
+a row, the map or the dropdown should be able to do it.
+
 They answer different questions, which is why neither replaces the other. The map answers *where is
 it, and is that near the thing I care about*. The list answers *what are my options, in an order I
 chose* — nearest first, or by name — and it is the only one of the two that stays usable when the
@@ -291,8 +301,11 @@ its portal: nearest within range.
 ### Selector requirements
 
 - **Gamepad navigation from the first commit.** Retrofitting Unity UI navigation later is miserable.
-- Per-portal **clearance chips** (Cu / Fe / Ag / Bm / Fl) — granted filled, missing dashed — plus a
-  verdict and a footer showing what you're carrying and how many destinations will take it.
+- Per-portal **clearance chips** (Cu / Fe / Ag / Bm / Dv / Fl) — granted named, missing dashed —
+  **right-aligned on the same line as the name**, plus a verdict showing what you're carrying and how
+  many destinations will take it.
+- **Mouse as well as keys**: clickable rows, a dropdown of every destination, and a clickable footer.
+  Each is another way to move one highlight; none replaces the keys.
 - Filter by **"only destinations that accept my cargo"**. Still meaningful under a shared target: you
   re-aim because you intend to travel with what you are holding.
 - Sort/filter by distance, name and favourites for the list view that backs the map.

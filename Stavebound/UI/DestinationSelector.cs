@@ -6,8 +6,10 @@ using Stavebound.Config;
 using Stavebound.Portals;
 using Stavebound.Tiers;
 using Stavebound.Travel;
+using HarmonyLib;
 using Jotunn.Managers;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Stavebound.UI
@@ -20,16 +22,18 @@ namespace Stavebound.UI
     /// stays useful when the destination is off the visible map or has no name worth recognising.
     /// </para>
     /// <para>
-    /// That both views come almost free is the payoff for making selection a <em>highlight</em> the
-    /// mouse and the stick both move, rather than a click target with keyboard support bolted on. A
-    /// second view of one highlight costs a rendering loop; two independent selections would have
-    /// cost a reconciliation problem. It is also why the gamepad works without a single Unity UI
-    /// navigation component — nothing has focus, so nothing has to be told where focus goes next.
+    /// That every view comes almost free is the payoff for making selection a <em>highlight</em>
+    /// that everything moves — the keys, the stick, a click on the map, a click on a row, the
+    /// dropdown — rather than a focus each control owns. Another view of one highlight costs a
+    /// rendering loop; independent selections would have cost a reconciliation problem. It is also
+    /// why the gamepad works without Unity UI navigation: every control has navigation switched off
+    /// and every click hands focus straight back, so nothing holds focus and nothing has to be told
+    /// where it goes next.
     /// </para>
     /// <para>
-    /// Confirming is always a separate keypress from highlighting, including with the mouse. A
-    /// re-aim changes everyone's route — possibly someone's mid-haul — so a stray click on a map
-    /// should not be able to do it.
+    /// Confirming is always a separate, deliberate action from highlighting — the confirm key or
+    /// the Confirm button, never a click on a row, the map or the dropdown. A re-aim changes
+    /// everyone's route, possibly someone's mid-haul, so a stray click should not be able to do it.
     /// </para>
     /// </summary>
     internal static class DestinationSelector
@@ -52,13 +56,13 @@ namespace Stavebound.UI
         /// view rather than paging, so the entries either side stay visible and moving through the
         /// list feels continuous.
         /// <para>
-        /// Seven rather than nine since each row grew a line of clearance chips. This is a budget as
-        /// much as a layout: an outlined UI Text costs about twenty mesh vertices per character and
-        /// Unity discards the entire mesh past 65000, so overrunning it blanks the panel instead of
-        /// truncating it.
+        /// Purely a layout number now, sized to the panel. It used to be a vertex budget as well: the
+        /// whole panel was one outlined Text, and Unity discards a text mesh past 65000 vertices,
+        /// which rendered as a blank panel. Each row is its own pair of Texts now, so that cliff is
+        /// far out of reach.
         /// </para>
         /// </summary>
-        private const int VisibleRows = 7;
+        private const int VisibleRows = 9;
 
         private static ZDOID _sourceId;
         private static long _sourcePid;
@@ -82,8 +86,42 @@ namespace Stavebound.UI
         /// </summary>
         private static Clearance _sourceMask;
         private static GameObject _panel;
-        private static Text _text;
+        private static Text _title;
+        private static Text _status;
+        private static Dropdown _picker;
+        private static Text _moreAbove;
+        private static Text _moreBelow;
+        private static readonly List<RowView> Rows = new List<RowView>();
+
+        /// <summary>Controls that mean nothing with an empty list, greyed out when the filter empties it.</summary>
+        private static readonly List<Selectable> NeedsCandidates = new List<Selectable>();
+
+        /// <summary>
+        /// Set whenever the candidate list is rebuilt, so the dropdown's options are regenerated only
+        /// when the list itself changed rather than on every step through it.
+        /// </summary>
+        private static bool _pickerStale;
         private static bool _updateSeen;
+
+        /// <summary>
+        /// Unity's legacy Dropdown has no public "is open" flag. The full-screen blocker it creates on
+        /// Show and destroys on Hide is the one reliable tell, and it lives in UnityEngine.UI rather
+        /// than the game assembly, so reading it is not the publicised-member hazard §12 describes.
+        /// </summary>
+        private static readonly AccessTools.FieldRef<Dropdown, GameObject> PickerBlocker =
+            AccessTools.FieldRefAccess<Dropdown, GameObject>("m_Blocker");
+
+        /// <summary>One clickable line of the list, reused as the window scrolls.</summary>
+        private sealed class RowView
+        {
+            internal GameObject Root;
+            internal Button Button;
+            internal Text Name;
+            internal Text Chips;
+
+            /// <summary>Which candidate this row is showing right now, or -1 while hidden.</summary>
+            internal int Candidate = -1;
+        }
 
         internal static bool IsOpen { get; private set; }
 
@@ -172,6 +210,27 @@ namespace Stavebound.UI
                 return;
             }
 
+            if (PickerIsOpen())
+            {
+                // The dropdown's own list has the keyboard while it is open: arrows move within it and
+                // Enter picks. Acting on the same keys here too would move a highlight the player
+                // cannot see behind the list, so the selector's keys wait. Cancel folds the list.
+                if (Cancelled())
+                {
+                    _picker.Hide();
+                }
+
+                return;
+            }
+
+            // The dropdown reselects itself as its list closes, and a focused control turns Enter and
+            // the arrow keys into UI navigation. Hand focus back whenever one of ours is holding it.
+            GameObject focused = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            if (focused != null && _panel != null && focused.transform.IsChildOf(_panel.transform))
+            {
+                Unfocus();
+            }
+
             if (Cancelled())
             {
                 Close();
@@ -186,27 +245,50 @@ namespace Stavebound.UI
 
             if (SelectorKeys.Pressed(SelectorKeys.Filter))
             {
-                _onlyWhatAcceptsMyCargo = !_onlyWhatAcceptsMyCargo;
-                Rebuild(Held());
-                ShowHighlight();
+                ToggleFilter();
                 return;
             }
 
             if (SelectorKeys.Pressed(SelectorKeys.Sort))
             {
-                _order = _order == SortOrder.Distance ? SortOrder.Name : SortOrder.Distance;
-                Rebuild(Held());
-                ShowHighlight();
+                ToggleSort();
                 return;
             }
 
             int step = Stepped();
             if (step != 0)
             {
-                // Wraps, because a list you can fall off the end of is worse than one you can loop.
-                _highlight = (_highlight + step + Candidates.Count) % Candidates.Count;
-                ShowHighlight();
+                Step(step);
             }
+        }
+
+        /// <summary>Moves the highlight. Shared by the keys and the previous/next buttons.</summary>
+        private static void Step(int step)
+        {
+            if (Candidates.Count == 0)
+            {
+                // Reachable with the cargo filter emptying the list. The modulo below would divide by
+                // zero, and it always could have from the keys alone.
+                return;
+            }
+
+            // Wraps, because a list you can fall off the end of is worse than one you can loop.
+            _highlight = (_highlight + step + Candidates.Count) % Candidates.Count;
+            ShowHighlight();
+        }
+
+        private static void ToggleFilter()
+        {
+            _onlyWhatAcceptsMyCargo = !_onlyWhatAcceptsMyCargo;
+            Rebuild(Held());
+            ShowHighlight();
+        }
+
+        private static void ToggleSort()
+        {
+            _order = _order == SortOrder.Distance ? SortOrder.Name : SortOrder.Distance;
+            Rebuild(Held());
+            ShowHighlight();
         }
 
         /// <summary>The pid currently highlighted, so a rebuild can put the selection back on it.</summary>
@@ -237,6 +319,7 @@ namespace Stavebound.UI
             }
 
             Sort();
+            _pickerStale = true;
 
             _highlight = keep == PortalTarget.NoPid ? 0 : Candidates.FindIndex(p => p.Pid == keep);
             if (_highlight < 0)
@@ -287,6 +370,13 @@ namespace Stavebound.UI
 
         private static void Commit()
         {
+            if (Candidates.Count == 0)
+            {
+                // The Confirm button, or the key, with the cargo filter emptying the list. There is
+                // nothing to aim at, and indexing the empty list would throw.
+                return;
+            }
+
             ZDO source = ZDOMan.instance?.GetZDO(_sourceId);
             if (source == null)
             {
@@ -318,10 +408,19 @@ namespace Stavebound.UI
 
             if (_panel != null)
             {
+                // Destroying the panel disables the dropdown, and Dropdown.OnDisable tears down an
+                // open list and its full-screen click blocker — so closing mid-pick strands neither.
                 UnityEngine.Object.Destroy(_panel);
                 _panel = null;
-                _text = null;
             }
+
+            _title = null;
+            _status = null;
+            _picker = null;
+            _moreAbove = null;
+            _moreBelow = null;
+            Rows.Clear();
+            NeedsCandidates.Clear();
 
             Candidates.Clear();
 
@@ -368,24 +467,36 @@ namespace Stavebound.UI
 
         private static void ShowHighlight()
         {
-            if (_text == null)
+            if (_panel == null)
             {
                 return;
             }
 
-            if (Candidates.Count == 0)
+            RefreshPicker();
+
+            bool any = Candidates.Count > 0;
+            foreach (Selectable control in NeedsCandidates)
+            {
+                control.interactable = any;
+            }
+
+            _title.text = Translations.Format(Translations.SelectorTitle, _sourceName);
+
+            if (!any)
             {
                 // Only reachable with the cargo filter on: there are destinations, just none that
-                // would take what you are holding. Saying so beats an empty box.
-                var empty = new StringBuilder();
-                empty.AppendLine(Translations.Format(Translations.SelectorTitle, _sourceName));
-                empty.AppendLine();
-                empty.AppendLine($"<color=#E06C4A>{Translations.Get(Translations.SelectorEmpty)}</color>");
-                empty.AppendLine();
-                empty.Append($"<size=13>[{Bound(SelectorKeys.Filter)}] {Translations.Get(Translations.SelectorShowAll)}   " +
-                             $"[{Bound(SelectorKeys.Cancel)}] {Translations.Get(Translations.Cancel)}</size>");
+                // would take what you are holding. Saying so beats an empty box, and the filter
+                // button stays live so the way back out is one click.
+                _status.text = $"<color=#E06C4A>{Translations.Get(Translations.SelectorEmpty)}</color>";
+                _moreAbove.text = string.Empty;
+                _moreBelow.text = string.Empty;
 
-                SetPanelText(empty.ToString());
+                foreach (RowView row in Rows)
+                {
+                    row.Root.SetActive(false);
+                    row.Candidate = -1;
+                }
+
                 return;
             }
 
@@ -394,13 +505,13 @@ namespace Stavebound.UI
             // Only on change, so the map still pans under the player's own hand between steps.
             Minimap.instance?.ShowPointOnMap(destination.Position);
 
-            var panel = new StringBuilder();
-            panel.AppendLine(Translations.Format(Translations.SelectorTitle, _sourceName));
             string ordering = Translations.Get(_order == SortOrder.Distance
                 ? Translations.SelectorByDistance
                 : Translations.SelectorByName);
             string filtered = _onlyWhatAcceptsMyCargo ? Translations.Get(Translations.SelectorFiltered) : string.Empty;
-            panel.AppendLine($"<size=13>{ordering}{filtered}</size>");
+
+            var status = new StringBuilder();
+            status.AppendLine($"{ordering}{filtered}");
 
             // Under Receive the chips on each row are the whole answer, so saying anything would be
             // noise. Under the other two they are not, and a player watching a chipless destination
@@ -408,70 +519,108 @@ namespace Stavebound.UI
             string flow = FlowNote();
             if (flow != null)
             {
-                panel.AppendLine($"<size=13><color=#B9A67A>{flow}</color></size>");
+                status.AppendLine($"<color=#B9A67A>{flow}</color>");
             }
 
-            panel.AppendLine(Verdict(destination));
-            panel.AppendLine();
+            status.Append(Verdict(destination));
+            _status.text = status.ToString();
 
             // A window onto the list rather than the whole thing: clamped so it never runs off
             // either end, and shifted to keep the highlight inside it.
             int first = Mathf.Clamp(_highlight - VisibleRows / 2, 0, Mathf.Max(0, Candidates.Count - VisibleRows));
             int last = Mathf.Min(first + VisibleRows, Candidates.Count);
 
-            panel.AppendLine(first > 0 ? $"<size=13>{Translations.Format(Translations.SelectorMoreAbove, first)}</size>" : " ");
+            _moreAbove.text = first > 0 ? Translations.Format(Translations.SelectorMoreAbove, first) : string.Empty;
+            _moreBelow.text = last < Candidates.Count
+                ? Translations.Format(Translations.SelectorMoreBelow, Candidates.Count - last)
+                : string.Empty;
 
-            for (int i = first; i < last; i++)
+            for (int slot = 0; slot < Rows.Count; slot++)
             {
-                PortalRecord row = Candidates[i];
-                float distance = Vector3.Distance(_sourcePosition, row.Position);
-                // Name and distance on one line, chips indented beneath, so a row reads as a heading
-                // and its detail rather than one long strip the eye has to parse.
-                string line = $"{Describe(row)}  <size=13>{distance:F0}m</size>\n     {Chips(row)}";
+                RowView row = Rows[slot];
+                int index = first + slot;
 
-                panel.AppendLine(i == _highlight
-                    ? $"<color=#FFB726>» {line}</color>"
-                    : $"<color=#C9C0AC>   {line}</color>");
+                if (index >= last)
+                {
+                    row.Root.SetActive(false);
+                    row.Candidate = -1;
+                    continue;
+                }
+
+                PortalRecord portal = Candidates[index];
+                bool current = index == _highlight;
+                string label = $"{Describe(portal)}  <size=12>{Vector3.Distance(_sourcePosition, portal.Position):F0}m</size>";
+
+                row.Candidate = index;
+                row.Root.SetActive(true);
+                row.Name.text = current
+                    ? $"<color=#FFB726>» {label}</color>"
+                    : $"<color=#C9C0AC>   {label}</color>";
+                row.Chips.text = Chips(portal);
+                row.Button.colors = RowColours(current);
             }
-
-            panel.AppendLine(last < Candidates.Count ? $"<size=13>{Translations.Format(Translations.SelectorMoreBelow, Candidates.Count - last)}</size>" : " ");
-            panel.AppendLine();
-            // Confirm and cancel first. The footer sits at the bottom of a fixed-height text box, so
-            // if anything is ever clipped it should be the line you can do without — and losing the
-            // two keys that commit or escape a modal panel is the worst possible thing to lose.
-            panel.AppendLine($"<size=13>[{Bound(SelectorKeys.Confirm)}] {Translations.Get(Translations.Confirm)}   " +
-                             $"[{Bound(SelectorKeys.Cancel)}] {Translations.Get(Translations.Cancel)}</size>");
-            panel.Append($"<size=13>[{Bound(SelectorKeys.Previous)} / {Bound(SelectorKeys.Next)}] " +
-                         $"{Translations.Get(Translations.Change)}   " +
-                         $"[{Bound(SelectorKeys.Sort)}] {Translations.Get(Translations.Sort)}   " +
-                         $"[{Bound(SelectorKeys.Filter)}] {Translations.Get(Translations.Filter)}</size>");
-
-            SetPanelText(panel.ToString());
         }
 
         /// <summary>
-        /// Assigns the panel text, complaining loudly if it has grown past what a UI Text can draw.
-        /// <para>
-        /// Unity discards a text mesh that exceeds 65000 vertices, which shows up as a panel that is
-        /// simply <em>blank</em> — no missing row, no error in the panel, nothing to suggest the text
-        /// was ever built. That is a miserable thing to debug from a screenshot, and it has already
-        /// happened once. The budget is roughly twenty vertices per drawn character with the outline
-        /// on, so this warns well before the cliff rather than at it.
-        /// </para>
+        /// Keeps the dropdown listing the same destinations, in the same order, as the rows beneath
+        /// it — regenerated only when the list itself changed, and otherwise just moved to the
+        /// highlight.
         /// </summary>
-        private static void SetPanelText(string text)
+        private static void RefreshPicker()
         {
-            const int Budget = 2400;
-
-            if (text.Length > Budget)
+            if (_picker == null)
             {
-                Jotunn.Logger.LogWarning(
-                    $"Selector text is {text.Length} characters, past the {Budget} this panel can " +
-                    "safely draw. Expect it to render blank. Shorten a row, or drop VisibleRows.");
+                return;
             }
 
-            _text.text = text;
+            if (_pickerStale)
+            {
+                _pickerStale = false;
+                _picker.ClearOptions();
+
+                var options = new List<string>(Candidates.Count);
+                foreach (PortalRecord portal in Candidates)
+                {
+                    // Plain text: an option is drawn by the template's own Text, which is not set up
+                    // for rich text, so markup here would be printed rather than obeyed.
+                    options.Add($"{Describe(portal)}   {Vector3.Distance(_sourcePosition, portal.Position):F0}m");
+                }
+
+                if (options.Count == 0)
+                {
+                    options.Add(Translations.Get(Translations.SelectorEmpty));
+                }
+
+                _picker.AddOptions(options);
+            }
+
+            // Without notify: this is the dropdown catching up with a highlight that moved some other
+            // way, not the player choosing, and firing the callback would loop straight back here.
+            _picker.SetValueWithoutNotify(Candidates.Count == 0 ? 0 : _highlight);
         }
+
+        /// <summary>
+        /// A row's background through each state: a faint band behind the highlight, a fainter one
+        /// under the pointer, and nothing otherwise.
+        /// </summary>
+        private static ColorBlock RowColours(bool current)
+        {
+            var clear = new Color(1f, 1f, 1f, 0f);
+            var band = new Color(1f, 0.72f, 0.15f, 0.16f);
+
+            return new ColorBlock
+            {
+                normalColor = current ? band : clear,
+                highlightedColor = current ? new Color(1f, 0.72f, 0.15f, 0.26f) : new Color(1f, 1f, 1f, 0.08f),
+                pressedColor = new Color(1f, 0.72f, 0.15f, 0.32f),
+                selectedColor = current ? band : clear,
+                disabledColor = clear,
+                colorMultiplier = 1f,
+                fadeDuration = 0.08f,
+            };
+        }
+
+        private static bool PickerIsOpen() => _picker != null && PickerBlocker(_picker) != null;
 
         /// <summary>
         /// The per-tier chips §5 asks for: granted tiers named, missing ones dashed.
@@ -612,6 +761,14 @@ namespace Stavebound.UI
             return string.IsNullOrEmpty(portal.Name) ? Translations.Get(Translations.UnnamedPortal) : portal.Name;
         }
 
+        // The panel's layout in its own units, top to bottom. Kept in one place so that moving anything
+        // means reading one column of numbers rather than hunting offsets through the builder.
+        private const float PanelWidth = 440f;
+        private const float PanelHeight = 530f;
+        private const float Inner = 400f;
+        private const float RowHeight = 28f;
+        private const float ChipsWidth = 132f;
+
         private static void BuildPanel()
         {
             if (_panel != null)
@@ -619,38 +776,231 @@ namespace Stavebound.UI
                 UnityEngine.Object.Destroy(_panel);
             }
 
+            Rows.Clear();
+            NeedsCandidates.Clear();
+
+            // Anchored to the left edge rather than offset from the centre, so the panel sits beside
+            // the map at every resolution instead of sliding off the side of a narrow screen.
             _panel = GUIManager.Instance.CreateWoodpanel(
                 parent: GUIManager.CustomGUIFront.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-600f, -60f),
-                width: 380f,
-                height: 540f);
+                anchorMin: new Vector2(0f, 0.5f),
+                anchorMax: new Vector2(0f, 0.5f),
+                position: new Vector2(40f + PanelWidth / 2f, -20f),
+                width: PanelWidth,
+                height: PanelHeight);
 
-            GameObject text = GUIManager.Instance.CreateText(
+            float top = 18f;
+
+            _title = AddText(top, 24f, 16, TextAnchor.MiddleLeft);
+            top += 28f;
+
+            GameObject picker = GUIManager.Instance.CreateDropDown(
+                _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, 14, Inner, 32f);
+            Place(picker.GetComponent<RectTransform>(), top, 32f, Inner);
+            _picker = picker.GetComponent<Dropdown>();
+            _picker.navigation = new Navigation { mode = Navigation.Mode.None };
+            _picker.onValueChanged.AddListener(OnPicked);
+            _pickerStale = true;
+            NeedsCandidates.Add(_picker);
+            top += 38f;
+
+            _status = AddText(top, 56f, 13, TextAnchor.UpperLeft);
+            top += 58f;
+
+            _moreAbove = AddText(top, 18f, 12, TextAnchor.MiddleLeft);
+            top += 18f;
+
+            for (int slot = 0; slot < VisibleRows; slot++)
+            {
+                Rows.Add(AddRow(top, slot));
+                top += RowHeight;
+            }
+
+            _moreBelow = AddText(top, 18f, 12, TextAnchor.MiddleLeft);
+            top += 24f;
+
+            // What the footer used to only describe, now pressable. Each label still names its key: a
+            // button that hides its binding teaches the mouse and nothing else.
+            float quarter = (Inner - 12f) / 4f;
+            float x = -Inner / 2f + quarter / 2f;
+            NeedsCandidates.Add(AddButton($"[{Bound(SelectorKeys.Previous)}]", top, 30f, quarter, x, () => Step(-1)));
+            NeedsCandidates.Add(AddButton($"[{Bound(SelectorKeys.Next)}]", top, 30f, quarter, x + (quarter + 4f), () => Step(1)));
+            AddButton($"[{Bound(SelectorKeys.Sort)}] {Translations.Get(Translations.Sort)}", top, 30f, quarter, x + 2f * (quarter + 4f), ToggleSort);
+            AddButton($"[{Bound(SelectorKeys.Filter)}] {Translations.Get(Translations.Filter)}", top, 30f, quarter, x + 3f * (quarter + 4f), ToggleFilter);
+            top += 36f;
+
+            float half = (Inner - 6f) / 2f;
+            NeedsCandidates.Add(AddButton($"[{Bound(SelectorKeys.Confirm)}] {Translations.Get(Translations.Confirm)}", top, 34f, half, -half / 2f - 3f, Commit));
+            AddButton($"[{Bound(SelectorKeys.Cancel)}] {Translations.Get(Translations.Cancel)}", top, 34f, half, half / 2f + 3f, Close);
+        }
+
+        /// <summary>Pins an element to the panel's top edge, <paramref name="top"/> units down.</summary>
+        private static void Place(RectTransform rect, float top, float height, float width, float x = 0f)
+        {
+            rect.anchorMin = new Vector2(0.5f, 1f);
+            rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(width, height);
+            rect.anchoredPosition = new Vector2(x, -top);
+        }
+
+        private static Text AddText(float top, float height, int size, TextAnchor alignment)
+        {
+            Text text = CreateLabel(_panel.transform, size, alignment);
+            Place(text.rectTransform, top, height, Inner);
+            return text;
+        }
+
+        private static Text CreateLabel(Transform parent, int size, TextAnchor alignment)
+        {
+            GameObject go = GUIManager.Instance.CreateText(
                 text: string.Empty,
-                parent: _panel.transform,
+                parent: parent,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
                 position: Vector2.zero,
                 font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
+                fontSize: size,
                 color: GUIManager.Instance.ValheimOrange,
                 outline: true,
                 outlineColor: Color.black,
-                width: 340f,
-                height: 500f,
+                width: Inner,
+                height: RowHeight,
                 addContentSizeFitter: false);
 
-            _text = text.GetComponent<Text>();
-            _text.alignment = TextAnchor.UpperLeft;
-            _text.supportRichText = true;
+            var text = go.GetComponent<Text>();
+            text.alignment = alignment;
+            text.supportRichText = true;
+
+            // Clicks belong to the row or button underneath, never to the words drawn on it.
+            text.raycastTarget = false;
+            return text;
+        }
+
+        /// <summary>
+        /// One list row: an invisible clickable band, with the name on the left and the clearance
+        /// chips right-aligned against the far edge.
+        /// </summary>
+        private static RowView AddRow(float top, int slot)
+        {
+            // Built inactive, so the button's first colour transition happens on enable with its
+            // configuration already in place — otherwise a white band flashes for a frame.
+            var root = new GameObject($"StaveboundRow{slot}", typeof(RectTransform));
+            root.SetActive(false);
+            root.transform.SetParent(_panel.transform, false);
+            Place((RectTransform)root.transform, top, RowHeight, Inner);
+
+            // Opaque white, tinted to nothing: invisible, still a raycast target, and a colour the
+            // button's tint multiplies into the band drawn behind the highlight.
+            var band = root.AddComponent<Image>();
+            band.color = Color.white;
+
+            var view = new RowView { Root = root, Button = root.AddComponent<Button>() };
+            view.Button.targetGraphic = band;
+            view.Button.transition = Selectable.Transition.ColorTint;
+            view.Button.colors = RowColours(current: false);
+            view.Button.navigation = new Navigation { mode = Navigation.Mode.None };
+            view.Button.onClick.AddListener(() =>
+            {
+                OnRowClicked(view);
+                Unfocus();
+            });
+
+            view.Name = CreateLabel(root.transform, 15, TextAnchor.MiddleLeft);
+            RectTransform name = view.Name.rectTransform;
+            name.anchorMin = Vector2.zero;
+            name.anchorMax = Vector2.one;
+            name.pivot = new Vector2(0f, 0.5f);
+            name.offsetMin = new Vector2(6f, 0f);
+            name.offsetMax = new Vector2(-(ChipsWidth + 8f), 0f);
+
+            // Wrap, then truncate vertically: a name too long for its column loses its tail rather
+            // than spilling across the chips.
+            view.Name.horizontalOverflow = HorizontalWrapMode.Wrap;
+            view.Name.verticalOverflow = VerticalWrapMode.Truncate;
+
+            view.Chips = CreateLabel(root.transform, 12, TextAnchor.MiddleRight);
+            RectTransform chips = view.Chips.rectTransform;
+            chips.anchorMin = new Vector2(1f, 0f);
+            chips.anchorMax = new Vector2(1f, 1f);
+            chips.pivot = new Vector2(1f, 0.5f);
+            chips.sizeDelta = new Vector2(ChipsWidth, 0f);
+            chips.anchoredPosition = new Vector2(-6f, 0f);
+
+            return view;
+        }
+
+        private static Button AddButton(string label, float top, float height, float width, float x, Action action)
+        {
+            GameObject go = GUIManager.Instance.CreateButton(
+                label, _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, width, height);
+            Place(go.GetComponent<RectTransform>(), top, height, width, x);
+
+            // Shrink-to-fit rather than a fixed size: "[LeftArrow]" and a translated label have to
+            // share a quarter of the panel's width, and clipping a key name would defeat showing it.
+            var text = go.GetComponentInChildren<Text>();
+            if (text != null)
+            {
+                text.resizeTextForBestFit = true;
+                text.resizeTextMinSize = 9;
+                text.resizeTextMaxSize = 14;
+            }
+
+            var button = go.GetComponent<Button>();
+            button.navigation = new Navigation { mode = Navigation.Mode.None };
+            button.onClick.AddListener(() =>
+            {
+                action();
+                Unfocus();
+            });
+
+            return button;
         }
 
         // -- Input -------------------------------------------------------------------------------
         //
         // Every key is a registered, rebindable button rather than a raw read — see SelectorKeys for
         // why. One name covers both keyboard and gamepad, so the two inputs cannot drift apart.
+
+        private static void OnRowClicked(RowView row)
+        {
+            if (row.Candidate < 0 || row.Candidate >= Candidates.Count)
+            {
+                return;
+            }
+
+            // Highlights, never confirms — the same contract as a click on the map.
+            _highlight = row.Candidate;
+            ShowHighlight();
+        }
+
+        private static void OnPicked(int index)
+        {
+            if (index < 0 || index >= Candidates.Count)
+            {
+                return;
+            }
+
+            _highlight = index;
+            ShowHighlight();
+            Unfocus();
+        }
+
+        /// <summary>
+        /// Hands focus back to nobody after a click.
+        /// <para>
+        /// A clicked control keeps EventSystem focus by default, and a focused Selectable is what turns
+        /// Enter, Space and a gamepad's submit into a second click and the arrow keys into UI
+        /// navigation. The selector is built on nothing holding focus, so every click gives it back.
+        /// </para>
+        /// </summary>
+        private static void Unfocus()
+        {
+            if (EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+            }
+        }
 
         private static int Stepped()
         {

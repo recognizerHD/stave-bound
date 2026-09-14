@@ -9,7 +9,58 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Balance — wants sessions, not checklists
+## 1. The mouse-driven selector — built, not run
+
+The panel was one rich-text `Text`, which could neither right-align part of a line nor tell which line
+was clicked. It is now separate elements: a dropdown, one clickable row per destination with its chips
+right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.30.0; never opened.
+
+- [ ] The panel draws at all, anchored to the left edge, with nothing overlapping
+- [ ] **Chips sit right-aligned on the same line** as each name; a long name is cut short rather than
+      running into them
+- [ ] **Clicking a row highlights it** and pans the map to it — and does **not** re-aim
+- [ ] **The dropdown** lists every destination in the same order as the rows, follows the highlight as
+      the arrow keys move it, and picking from it moves the highlight
+- [ ] With the dropdown **open**, the arrow keys move within its list and do *not* also move the
+      highlight behind it; Escape folds the list rather than closing the selector
+- [ ] **Each footer button** does what its key does: previous, next, sort, filter, confirm, cancel
+- [ ] **The keys still work** after clicking — a clicked button must not keep focus and swallow P, or
+      turn the arrow keys into UI navigation
+- [ ] **A gamepad** still drives the whole thing, unchanged
+- [ ] Turn the cargo filter on while carrying something nothing accepts: the empty message shows,
+      previous/next/confirm grey out, and **pressing confirm does nothing** rather than throwing. That
+      last one was a real crash on the keys alone before this change, and so was stepping with the
+      arrows — both would index or divide by an empty list
+
+## 2. Suspected bug — a traveller's body left at the departure portal
+
+**Not fixed, not diagnosed; flagged to look into later.** When another player walks through a portal,
+an observer keeps seeing their body standing at the departure portal. The traveller really has gone —
+they are on the other side — and the leftover body **keeps animating whatever they do there** (emotes,
+actions) while never changing position. It disappears once the observer teleports themselves.
+
+What is known so far:
+
+- The animation still updating means the observer **is** still receiving that player's updates. It is
+  only the *position* that never gets applied. That rules out the first theory, that the server simply
+  stopped sending updates once the player jumped out of range.
+- Position and animation sync separately in the game: position through `ZSyncTransform`, which carries
+  a position revision counter and can sync relative to a parent object, animation through its own
+  component. **The mod touches neither.**
+- Both places Stavebound is in the teleport path were checked against the 1.0 assembly and match
+  vanilla: the `TeleportWorld.Teleport` prefix transcribes 1.0's method call for call, and the flag
+  seamless transit clears is read elsewhere only by the traveller's own loading screen.
+
+So the best guess is a Valheim 1.0 bug — but that is a code reading, which is exactly what this file
+says not to trust. The deciding test:
+
+- [ ] Disable Stavebound for **every** player **and** the server (the mod requires all of them to match,
+      so a half-modded setup will not connect), pair two portals by name, and watch someone go through.
+      Body left behind → the game's. Gone → ours
+- [ ] Note **when** the body disappears on its own, if it ever does, and whether seamless transit being
+      on for the traveller makes any difference
+
+## 3. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -23,7 +74,7 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 2. Standing gaps
+## 4. Standing gaps
 
 Smaller, older, and none of them blocking.
 
@@ -32,7 +83,6 @@ Smaller, older, and none of them blocking.
       conflicting mod
 - [ ] Seamless transit has been played, but not with a client whose destination is unloaded **on a
       server** — the case it exists for. The single-machine case is covered
-
 
 ## Confirmed
 
