@@ -9,56 +9,7 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. The mouse-driven selector — built, not run
-
-The panel was one rich-text `Text`, which could neither right-align part of a line nor tell which line
-was clicked. It is now separate elements: a dropdown, one clickable row per destination with its chips
-right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.30.0; never opened.
-
-- [ ] The panel draws at all, anchored to the left edge, with nothing overlapping
-- [ ] **Chips sit right-aligned on the same line** as each name; a long name is cut short rather than
-      running into them
-- [ ] **Arrow keys only highlight**; P re-aims at the highlighted destination
-- [ ] **Clicking a row re-aims at once** and closes the selector — no P needed
-- [ ] **The dropdown** lists every destination in the same order as the rows and follows the highlight
-      as the arrow keys move it; **picking from it re-aims at once**
-- [ ] With the dropdown **open**, the arrow keys move within its list and do *not* also move the
-      highlight behind it; Escape folds the list rather than closing the selector
-- [ ] **Each footer button** does what its key does: previous, next, sort, filter, confirm, cancel
-- [ ] **The keys still work** after clicking — a clicked button must not keep focus and swallow P, or
-      turn the arrow keys into UI navigation
-- [ ] **A gamepad** still drives the whole thing, unchanged
-- [ ] **The mouse wheel over the list** moves the highlight one row per notch — up for a wheel rolled
-      away — and stops at either end rather than wrapping. **The map does not zoom** at the same time
-- [ ] **The wheel over the map**, away from the panel, still zooms the map exactly as vanilla
-- [ ] With the dropdown open, the wheel scrolls its list and the map does not zoom
-- [ ] On a trackpad, one swipe steps a handful of rows rather than racing to the end
-- [ ] **Hovering a row pans the map to it** without moving the highlight; sliding across several rows
-      follows the pointer without the map bouncing back between them; **leaving the list returns the
-      map to the highlighted destination**
-- [ ] **Clicking a portal's pin on the map re-aims at it and closes the map** — as easy to hit as any
-      other pin, since it uses the map's own pin-click distance, which scales with zoom. Closing the map
-      used to check a flag the game never toggles, so this is also the check that it now really closes
-- [ ] **Clicking empty map does nothing** — no re-aim, no pin dialog, no ping
-- [ ] With the cargo filter on, **filtered-out destinations' pins disappear** from the map, so no pin
-      offers something the list does not
-- [ ] The map click now reads the pointer through the game's own input rather than Unity's legacy one,
-      which 1.0 moved away from — possibly the first time map clicking has worked on 1.0 at all
-- [ ] **The portal nearest your bed** has a light-blue name in the list — still blue when highlighted —
-      and a light-blue pin on the map. With no bed set in the world, nothing is coloured; if the portal
-      you are re-aiming is itself the nearest, nothing is coloured either
-- [ ] **Every other destination's pin is orange** while the selector is open, and pins you placed
-      yourself keep their usual colour
-- [ ] **Each setting under `8 - Selector` switches its behaviour off**: `ClickPicksPortal` (rows and
-      dropdown then only highlight), `MapClickPicksPortal` (a pin click then only highlights),
-      `HoverPreviewsOnMap`, `WheelScrollsList` (the map then zooms under the list), `ColourHomePortal`,
-      `ColourPortalPins`
-- [ ] Turn the cargo filter on while carrying something nothing accepts: the empty message shows,
-      previous/next/confirm grey out, and **pressing confirm does nothing** rather than throwing. That
-      last one was a real crash on the keys alone before this change, and so was stepping with the
-      arrows — both would index or divide by an empty list
-
-## 2. Suspected bug — a traveller's body left at the departure portal
+## 1. Suspected bug — a traveller's body left at the departure portal
 
 **Not fixed, not diagnosed; flagged to look into later.** When another player walks through a portal,
 an observer keeps seeing their body standing at the departure portal. The traveller really has gone —
@@ -111,7 +62,7 @@ The deciding test, which settles whose it is regardless:
 - [ ] Note **when** the body disappears on its own, if it ever does, and whether seamless transit being
       on for the traveller makes any difference
 
-## 3. Balance — wants sessions, not checklists
+## 2. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -125,11 +76,15 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 4. Standing gaps
+## 3. Standing gaps
 
 Smaller, older, and none of them blocking.
 
-- [ ] Gamepad navigation of the selector has been exercised far less than keyboard
+- [ ] Gamepad navigation of the selector has been exercised far less than keyboard — and not at all
+      since the panel was rebuilt for the mouse. Navigation is off on every new control precisely so the
+      pad is unaffected; that is the claim to check
+- [ ] The wheel on a **trackpad**, where one swipe should step a handful of rows rather than racing to
+      the end of the list
 - [ ] Conflict detection warns by GUID and has never been run against an actually-installed
       conflicting mod
 - [ ] Seamless transit has been played, but not with a client whose destination is unloaded **on a
@@ -138,6 +93,28 @@ Smaller, older, and none of them blocking.
 ## Confirmed
 
 Kept as a record of what the tests were, so a regression has something to be measured against.
+
+### The mouse-driven selector — passed
+
+The panel used to be one rich-text `Text`, which could neither right-align part of a line nor tell
+which line was clicked. It is now separate elements, and every behaviour below was confirmed in play:
+
+- Rows with clearance chips right-aligned on the same line as the name
+- **Keys browse, clicks choose**: arrow keys highlight and P picks; clicking a row or a dropdown entry
+  picks at once; clicking a portal's pin on the map picks it and closes the map, and clicking empty map
+  does nothing
+- The dropdown, following the highlight and picking on selection
+- The footer's key hints as working buttons
+- The mouse wheel scrolling the list without zooming the map, and still zooming it elsewhere
+- Hovering a row panning the map to it, and returning to the highlight on leaving the list
+- The portal nearest the player's **bed** in light blue, in the list and on its pin; every other
+  destination's pin orange, distinct from pins the player placed
+- Each of those switchable under `8 - Selector`
+
+Two regressions worth remembering, both reachable before this work: with the cargo filter emptying the
+list, the confirm key indexed an empty list and the arrow keys divided by zero. And closing the
+selector checked `m_mapLarge.activeSelf`, which `SetMapMode` never changes, so a pick could leave the
+map open — it checks `m_mode` now, as `Update` always did.
 
 ### Valheim 1.0 — passed
 
