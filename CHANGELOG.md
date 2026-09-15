@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-09-14
+
+**Update the server and every player together.** Stavebound refuses to connect
+across minor versions, so a 1.0.0 player cannot join a 1.1.0 server, or the
+other way round. That is the check working as intended — it stops two builds
+quietly disagreeing about portals — but it means nobody can update alone.
 
 **The destination selector works with a mouse.** Each destination is a clickable
 row with its clearance chips right-aligned; a dropdown lists them all; the key
