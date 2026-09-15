@@ -1,3 +1,4 @@
+using System;
 using Stavebound.UI;
 using HarmonyLib;
 using UnityEngine;
@@ -12,6 +13,15 @@ namespace Stavebound.Patches
     internal static class MinimapPatches
     {
         /// <summary>
+        /// The map's own pin-click distance — its remove radius scaled by the current zoom. The getter is
+        /// private, so it is reached through Harmony and cached rather than through the publicised
+        /// signature, which would compile and then throw at runtime (DESIGN.md §12).
+        /// </summary>
+        private static readonly Func<Minimap, float> PinInteractRadius =
+            AccessTools.MethodDelegate<Func<Minimap, float>>(
+                AccessTools.PropertyGetter(typeof(Minimap), "PinInteractRadius"));
+
+        /// <summary>
         /// Drives the selector from the map's own update, which ties its lifetime to the thing it
         /// draws on: if the map stops, so does the selector, however the player closed it.
         /// </summary>
@@ -23,12 +33,12 @@ namespace Stavebound.Patches
         }
 
         /// <summary>
-        /// While selecting, a click moves the highlight instead of dropping a ping. Confirming stays
-        /// a separate keypress — see <see cref="DestinationSelector"/>.
+        /// While selecting, clicking a portal's pin re-aims at it, and clicking anywhere else does
+        /// nothing — no pin dialog, no ping. See <see cref="DestinationSelector.SelectNear"/>.
         /// </summary>
         [HarmonyPrefix]
         [HarmonyPatch(nameof(Minimap.OnMapLeftClick))]
-        private static bool ClickToHighlight(Minimap __instance)
+        private static bool ClickToSelect(Minimap __instance)
         {
             if (!DestinationSelector.IsOpen)
             {
@@ -44,7 +54,7 @@ namespace Stavebound.Patches
             var world = (Vector3)AccessTools.Method(typeof(Minimap), "ScreenToWorldPoint")
                 .Invoke(__instance, new object[] { ZInput.pointerPosition });
 
-            DestinationSelector.HighlightNearest(world);
+            DestinationSelector.SelectNear(world, PinInteractRadius(__instance));
             return false;
         }
     }

@@ -221,15 +221,24 @@ Moving the highlight moves both. That is why the interaction model is a highligh
 target — it costs nothing to add a second view of a highlight, and a great deal to reconcile two
 independent ones.
 
-That bet paid off when mouse input arrived. The list's rows are clickable, a dropdown above them lists
-every destination, and the footer's key hints are real buttons — and every one of those is just another
-way to move the *same* highlight, alongside the keys, the stick and a click on the map. None of them
-takes focus: navigation is off on every control and each click hands focus straight back, so the
-gamepad path is exactly what it was.
+That bet paid off when mouse input arrived: clickable rows, a dropdown of every destination, a
+clickable footer, the wheel and hover all drive the same single highlight. None of them takes focus —
+navigation is off on every control and each click hands focus straight back — so the gamepad path is
+exactly what it was.
 
-**Highlighting never confirms**, whichever input did it. Only the confirm key or the Confirm button
-re-aims a portal. A re-aim changes everyone's route, possibly someone's mid-haul, so no stray click on
-a row, the map or the dropdown should be able to do it.
+**Keys browse; clicks choose.** The keys, the stick, the wheel and the previous/next buttons only move
+the highlight, and the confirm key (or the Confirm button) re-aims. A mouse click is already a
+decision, so clicking a row, a portal's pin on the map, or a dropdown entry re-aims at once. Hovering
+a row pans the map to it as a preview and never commits. A click on the map that lands on no pin does
+nothing, rather than choosing whatever destination happens to be nearest.
+
+An earlier draft said highlighting should never confirm, whichever input did it, so that no stray
+click could re-aim a portal. That rule was dropped by choice: needing a keypress after a click turned
+out to be friction rather than protection, and a wrong re-aim is announced on screen and undone by
+re-aiming.
+
+The portal **nearest the world spawn** is drawn in its own colour, in the list and on its map pin,
+found the way the game itself finds the spawn: the start location's map icon.
 
 They answer different questions, which is why neither replaces the other. The map answers *where is
 it, and is that near the thing I care about*. The list answers *what are my options, in an order I

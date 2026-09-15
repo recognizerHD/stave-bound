@@ -18,9 +18,10 @@ right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.3
 - [ ] The panel draws at all, anchored to the left edge, with nothing overlapping
 - [ ] **Chips sit right-aligned on the same line** as each name; a long name is cut short rather than
       running into them
-- [ ] **Clicking a row highlights it** and pans the map to it — and does **not** re-aim
-- [ ] **The dropdown** lists every destination in the same order as the rows, follows the highlight as
-      the arrow keys move it, and picking from it moves the highlight
+- [ ] **Arrow keys only highlight**; P re-aims at the highlighted destination
+- [ ] **Clicking a row re-aims at once** and closes the selector — no P needed
+- [ ] **The dropdown** lists every destination in the same order as the rows and follows the highlight
+      as the arrow keys move it; **picking from it re-aims at once**
 - [ ] With the dropdown **open**, the arrow keys move within its list and do *not* also move the
       highlight behind it; Escape folds the list rather than closing the selector
 - [ ] **Each footer button** does what its key does: previous, next, sort, filter, confirm, cancel
@@ -35,9 +36,16 @@ right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.3
 - [ ] **Hovering a row pans the map to it** without moving the highlight; sliding across several rows
       follows the pointer without the map bouncing back between them; **leaving the list returns the
       map to the highlighted destination**
-- [ ] **Clicking the map still highlights the nearest destination.** It now reads the pointer through
-      the game's own input rather than Unity's legacy one, which 1.0 moved away from — so this is both a
-      regression check and possibly the first time it has worked on 1.0 at all
+- [ ] **Clicking a portal's pin on the map re-aims at it** — as easy to hit as any other pin, since it
+      uses the map's own pin-click distance, which scales with zoom
+- [ ] **Clicking empty map does nothing** — no re-aim, no pin dialog, no ping
+- [ ] With the cargo filter on, **filtered-out destinations' pins disappear** from the map, so no pin
+      offers something the list does not
+- [ ] The map click now reads the pointer through the game's own input rather than Unity's legacy one,
+      which 1.0 moved away from — possibly the first time map clicking has worked on 1.0 at all
+- [ ] **The portal nearest the world spawn** (the start temple, not a bed) has a light-blue name in the
+      list — still blue when highlighted — and a light-blue pin on the map. If the portal you are
+      re-aiming is itself the nearest, nothing is coloured
 - [ ] Turn the cargo filter on while carrying something nothing accepts: the empty message shows,
       previous/next/confirm grey out, and **pressing confirm does nothing** rather than throwing. That
       last one was a real crash on the keys alone before this change, and so was stepping with the
