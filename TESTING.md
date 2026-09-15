@@ -36,16 +36,20 @@ right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.3
 - [ ] **Hovering a row pans the map to it** without moving the highlight; sliding across several rows
       follows the pointer without the map bouncing back between them; **leaving the list returns the
       map to the highlighted destination**
-- [ ] **Clicking a portal's pin on the map re-aims at it** — as easy to hit as any other pin, since it
-      uses the map's own pin-click distance, which scales with zoom
+- [ ] **Clicking a portal's pin on the map re-aims at it and closes the map** — as easy to hit as any
+      other pin, since it uses the map's own pin-click distance, which scales with zoom. Closing the map
+      used to check a flag the game never toggles, so this is also the check that it now really closes
 - [ ] **Clicking empty map does nothing** — no re-aim, no pin dialog, no ping
 - [ ] With the cargo filter on, **filtered-out destinations' pins disappear** from the map, so no pin
       offers something the list does not
 - [ ] The map click now reads the pointer through the game's own input rather than Unity's legacy one,
       which 1.0 moved away from — possibly the first time map clicking has worked on 1.0 at all
-- [ ] **The portal nearest the world spawn** (the start temple, not a bed) has a light-blue name in the
-      list — still blue when highlighted — and a light-blue pin on the map. If the portal you are
-      re-aiming is itself the nearest, nothing is coloured
+- [ ] **The portal nearest your bed** has a light-blue name in the list — still blue when highlighted —
+      and a light-blue pin on the map. With no bed set in the world, nothing is coloured; if the portal
+      you are re-aiming is itself the nearest, nothing is coloured either
+- [ ] **Each setting under `8 - Selector` switches its behaviour off**: `ClickPicksPortal` (rows and
+      dropdown then only highlight), `MapClickPicksPortal` (a pin click then only highlights),
+      `HoverPreviewsOnMap`, `WheelScrollsList` (the map then zooms under the list), `ColourHomePortal`
 - [ ] Turn the cargo filter on while carrying something nothing accepts: the empty message shows,
       previous/next/confirm grey out, and **pressing confirm does nothing** rather than throwing. That
       last one was a real crash on the keys alone before this change, and so was stepping with the
@@ -76,7 +80,27 @@ What is known so far:
   seamless transit clears is read elsewhere only by the traveller's own loading screen.
 
 So the best guess is a Valheim 1.0 bug — but that is a code reading, which is exactly what this file
-says not to trust. The deciding test:
+says not to trust.
+
+**Collecting the evidence — `stave_players`.** Needs the F5 console switched on (in 1.0's settings, or
+the `-console` launch option) but **not** `devcommands`: it is registered as neither a cheat nor hidden
+behind dev commands. It watches for three seconds, then prints each player three ways — where they are
+drawn, where this machine's data says, and where the server's player list says — with a verdict line.
+
+- [ ] The traveller ticks **"Visible to other players"** on their map first, or the server column is empty
+- [ ] Traveller walks through a portal. While the body is still visible, the **watcher** runs
+      `stave_players`; the **traveller** runs it too
+- [ ] Both copy the output — it is also in each machine's `BepInEx/LogOutput.log`
+
+What the verdicts mean:
+
+| Verdict | Meaning | Whose |
+|---|---|---|
+| `STALE COPY` on the watcher | The watcher stopped being sent the traveller's position after they left its area, and never cleaned up the old body | The game's streaming; fixable client-side |
+| `BODY NOT MOVED` on the watcher | The position arrived; the body was never moved to it | Almost certainly the game's; fixable by snapping |
+| `YOUR OWN data is ...m from where the server says` on the traveller | The traveller's own game never reported the move | **Potentially ours** — the teleport path |
+
+The deciding test, which settles whose it is regardless:
 
 - [ ] Disable Stavebound for **every** player **and** the server (the mod requires all of them to match,
       so a half-modded setup will not connect), pair two portals by name, and watch someone go through.

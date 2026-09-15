@@ -93,6 +93,7 @@ namespace Stavebound.Portals
             CommandManager.Instance.AddConsoleCommand(new PortalRegistryCommand());
             CommandManager.Instance.AddConsoleCommand(new PortalAimCommand());
             CommandManager.Instance.AddConsoleCommand(new PortalNetCommand());
+            CommandManager.Instance.AddConsoleCommand(new PlayerPositionsCommand());
             CommandManager.Instance.AddConsoleCommand(new Tiers.BlockedItemsCommand());
             CommandManager.Instance.AddConsoleCommand(new Tiers.PrefabSearchCommand());
             CommandManager.Instance.AddConsoleCommand(new Tiers.PrefabInspectCommand());

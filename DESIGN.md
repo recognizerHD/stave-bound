@@ -237,8 +237,13 @@ click could re-aim a portal. That rule was dropped by choice: needing a keypress
 out to be friction rather than protection, and a wrong re-aim is announced on screen and undone by
 re-aiming.
 
-The portal **nearest the world spawn** is drawn in its own colour, in the list and on its map pin,
-found the way the game itself finds the spawn: the start location's map icon.
+The portal **nearest your bed** — your home, where you respawn — is drawn in its own colour, in the
+list and on its map pin. Not the world's starting spawn: home is where a player chose to sleep. The bed
+lives in the local player profile, so each player sees their own home portal.
+
+Every mouse behaviour above is a per-player setting under `8 - Selector` — click to pick, click a pin
+to pick, hover to preview, the wheel scrolling the list, and the home colour — local and never synced,
+since none of them changes what a portal permits.
 
 They answer different questions, which is why neither replaces the other. The map answers *where is
 it, and is that near the thing I care about*. The list answers *what are my options, in an order I

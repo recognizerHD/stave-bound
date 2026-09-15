@@ -101,6 +101,9 @@ playable on a pad.
 | `SeamlessTransit` | Off by default. Ends a trip when the destination has loaded rather than on vanilla's eight-second timer — a destination already in memory skips the loading screen entirely |
 | `ShowBlockedCargoOverlay` | Marks the stacks a nearby portal's destination will refuse |
 | `HidePortalNames` | Hides names in the selector, if you would rather navigate by the map |
+| `ClickPicksPortal` | On by default. Clicking a destination in the list or dropdown picks it at once; off, a click only highlights and the confirm key picks |
+| `MapClickPicksPortal` | On by default. Clicking a portal's pin on the map picks it and closes the map; off, it only highlights |
+| `ColourHomePortal` | On by default. The portal nearest your bed is drawn in its own colour |
 
 Two resources are **sealed**: the Deep North's Bloodgold and Petrified Tissue. No stave carries them
 and none ever will — the base game moves those by stone portal and nothing else, and this mod leaves
@@ -126,6 +129,10 @@ Type `help` in the F5 console for the full list. The useful ones:
 - `stave_portals` — every portal this game knows about, where it points, and its clearance
 - `stave_items` — every item the game refuses to teleport, and which stave permits it
 - `stave_net` — the sync's state. Run it on a server and a client and compare
+- `stave_players` — where every player is, as drawn, as this machine holds them, and as the server
+  reports them. For diagnosing a player who looks left behind at a portal
+
+None of these need `devcommands` — only the console, which you can switch on in the game's settings.
 
 ## A note on cheating
 

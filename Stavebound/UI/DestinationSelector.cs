@@ -34,7 +34,8 @@ namespace Stavebound.UI
     /// Keys and mouse confirm differently, on purpose. The keys, the stick and the wheel only move the
     /// highlight, and the confirm key re-aims: stepping through a list is browsing, and browsing should
     /// never commit. A mouse click is already a choice, so clicking a row, a portal's pin on the map, or
-    /// an entry in the dropdown re-aims at once. Hovering stays a preview and never commits.
+    /// an entry in the dropdown re-aims at once. Hovering stays a preview and never commits. Each mouse
+    /// behaviour can be switched off per player, under <c>8 - Selector</c> in the config.
     /// </para>
     /// </summary>
     internal static class DestinationSelector
@@ -120,13 +121,13 @@ namespace Stavebound.UI
         private const float WheelInterval = 0.06f;
 
         /// <summary>
-        /// The portal nearest the world's spawn, drawn in its own colour in the list and on the map, and
-        /// that portal's pin while the selector is showing it.
+        /// The portal nearest the player's bed — their home — drawn in its own colour in the list and on
+        /// the map, and that portal's pin while the selector is showing it.
         /// </summary>
-        private static long _spawnPid = PortalTarget.NoPid;
-        private static Minimap.PinData _spawnPin;
-        private static readonly Color SpawnColour = new Color(0.50f, 0.83f, 1f);
-        private const string SpawnHex = "#7FD4FF";
+        private static long _homePid = PortalTarget.NoPid;
+        private static Minimap.PinData _homePin;
+        private static readonly Color HomeColour = new Color(0.50f, 0.83f, 1f);
+        private const string HomeHex = "#7FD4FF";
 
         /// <summary>The row under the pointer, if any, and whether the map is showing it instead of the highlight.</summary>
         private static RowView _hovered;
@@ -182,7 +183,7 @@ namespace Stavebound.UI
             _sourcePid = sourcePid;
             _sourceMask = ClearanceGate.MaskOf(source);
             _carrying = CarriedTiers(who as Player);
-            _spawnPid = NearestToSpawn();
+            _homePid = NearestToHome();
             _onlyWhatAcceptsMyCargo = false;
 
             Rebuild(PortalTarget.NoPid);
@@ -242,11 +243,11 @@ namespace Stavebound.UI
             }
 
             // The map repaints every pin's icon colour each frame in UpdatePins, which runs earlier in the
-            // same Minimap.Update this postfix follows — so the spawn tint has to be laid on after it,
+            // same Minimap.Update this postfix follows — so the home tint has to be laid on after it,
             // every frame, or it is gone before it is ever drawn.
-            if (_spawnPin?.m_iconElement != null)
+            if (_homePin?.m_iconElement != null)
             {
-                _spawnPin.m_iconElement.color = SpawnColour;
+                _homePin.m_iconElement.color = HomeColour;
             }
 
             if (PickerIsOpen())
@@ -320,7 +321,9 @@ namespace Stavebound.UI
         /// Whether the wheel belongs to the selector rather than the map this frame: while the pointer
         /// is over the panel, or while the dropdown's list is open and scrolling itself.
         /// </summary>
-        internal static bool OwnsWheel() => IsOpen && _panel != null && (PickerIsOpen() || PointerOverPanel());
+        internal static bool OwnsWheel() =>
+            IsOpen && _panel != null &&
+            (PickerIsOpen() || (StaveboundConfig.WheelScrollsList.Value && PointerOverPanel()));
 
         internal static void ReceiveWheel(float delta)
         {
@@ -338,7 +341,8 @@ namespace Stavebound.UI
         /// </summary>
         private static void ScrollFromWheel()
         {
-            if (_wheelFrame != Time.frameCount || _wheel == 0f || Candidates.Count == 0)
+            if (!StaveboundConfig.WheelScrollsList.Value ||
+                _wheelFrame != Time.frameCount || _wheel == 0f || Candidates.Count == 0)
             {
                 return;
             }
@@ -385,7 +389,8 @@ namespace Stavebound.UI
         /// </summary>
         internal static void HoverEntered(RowView row)
         {
-            if (!IsOpen || row == null || row.Candidate < 0 || row.Candidate >= Candidates.Count)
+            if (!IsOpen || !StaveboundConfig.HoverPreviewsOnMap.Value ||
+                row == null || row.Candidate < 0 || row.Candidate >= Candidates.Count)
             {
                 return;
             }
@@ -526,7 +531,15 @@ namespace Stavebound.UI
             }
 
             _highlight = hit;
-            Commit();
+
+            if (StaveboundConfig.MapClickPicksPortal.Value)
+            {
+                Commit();
+            }
+            else
+            {
+                ShowHighlight();
+            }
         }
 
         private static void Commit()
@@ -584,12 +597,14 @@ namespace Stavebound.UI
             NeedsCandidates.Clear();
             _hovered = null;
             _previewing = false;
-            _spawnPid = PortalTarget.NoPid;
+            _homePid = PortalTarget.NoPid;
 
             Candidates.Clear();
 
-            if (Minimap.instance != null && Minimap.instance.m_mapLarge != null &&
-                Minimap.instance.m_mapLarge.activeSelf)
+            // m_mode, the same flag Update watches, and for the same reason: SetMapMode toggles
+            // m_largeRoot and leaves m_mapLarge alone, so checking m_mapLarge could leave the map open
+            // behind a selector that had already closed — after a click on a pin, most visibly.
+            if (Minimap.instance != null && Minimap.instance.m_mode == Minimap.MapMode.Large)
             {
                 Minimap.instance.SetMapMode(Minimap.MapMode.Small);
             }
@@ -614,9 +629,9 @@ namespace Stavebound.UI
 
                 Pins.Add(pin);
 
-                if (portal.Pid == _spawnPid)
+                if (portal.Pid == _homePid)
                 {
-                    _spawnPin = pin;
+                    _homePin = pin;
                 }
             }
         }
@@ -632,7 +647,7 @@ namespace Stavebound.UI
             }
 
             Pins.Clear();
-            _spawnPin = null;
+            _homePin = null;
         }
 
         private static void ShowHighlight()
@@ -730,10 +745,10 @@ namespace Stavebound.UI
 
                 row.Candidate = index;
                 row.Root.SetActive(true);
-                // The spawn portal keeps its colour even when highlighted, with the marker and the band
+                // The home portal keeps its colour even when highlighted, with the marker and the band
                 // saying which row is current — otherwise it would stop being findable the moment it
                 // was the one you were on.
-                string colour = portal.Pid == _spawnPid ? SpawnHex : current ? "#FFB726" : "#C9C0AC";
+                string colour = portal.Pid == _homePid ? HomeHex : current ? "#FFB726" : "#C9C0AC";
                 row.Name.text = current
                     ? $"<color=#FFB726>» </color><color={colour}>{label}</color>"
                     : $"<color={colour}>   {label}</color>";
@@ -930,29 +945,34 @@ namespace Stavebound.UI
         private static string Bound(string button) => SelectorKeys.KeyLabel(button);
 
         /// <summary>
-        /// The portal nearest where the world starts every new character, or none if this client has not
-        /// been told where that is.
+        /// The portal nearest the player's bed — the spawn point a bed sets, where they respawn — or none
+        /// when they have not set one in this world, or have switched the colouring off.
         /// <para>
-        /// Found the way the game finds it for a first spawn — the start location's map icon, via
-        /// <c>Game.m_StartLocation</c> — and location icons are sent to clients, so this works off the
-        /// server too. Every portal counts, including the one being re-aimed: if that is the nearest, no
-        /// destination is coloured, which is simply true.
+        /// Deliberately not the world's starting spawn. "Home" is where a player chose to sleep, and the
+        /// start temple is somewhere every character leaves on day one. The bed is kept in the local
+        /// player profile, so each player sees their own home portal and nobody else's.
+        /// </para>
+        /// <para>
+        /// Every portal counts, including the one being re-aimed: if that is the nearest, no destination
+        /// is coloured, which is simply true.
         /// </para>
         /// </summary>
-        private static long NearestToSpawn()
+        private static long NearestToHome()
         {
-            if (Game.instance == null || ZoneSystem.instance == null ||
-                !ZoneSystem.instance.GetLocationIcon(Game.instance.m_StartLocation, out Vector3 spawn))
+            PlayerProfile profile = Game.instance != null ? Game.instance.GetPlayerProfile() : null;
+
+            if (!StaveboundConfig.ColourHomePortal.Value || profile == null || !profile.HaveCustomSpawnPoint())
             {
                 return PortalTarget.NoPid;
             }
 
+            Vector3 home = profile.GetCustomSpawnPoint();
             long nearest = PortalTarget.NoPid;
             float best = float.MaxValue;
 
             foreach (PortalRecord portal in PortalRegistry.All)
             {
-                Vector3 offset = portal.Position - spawn;
+                Vector3 offset = portal.Position - home;
                 offset.y = 0f;
 
                 float distance = offset.sqrMagnitude;
@@ -1189,9 +1209,18 @@ namespace Stavebound.UI
                 return;
             }
 
-            // A click is a choice, so it re-aims at once. See the class note on keys versus mouse.
+            // A click is a choice, so it re-aims at once — unless the player has asked for clicks to
+            // highlight only. See the class note on keys versus mouse.
             _highlight = row.Candidate;
-            Commit();
+
+            if (StaveboundConfig.ClickPicksPortal.Value)
+            {
+                Commit();
+            }
+            else
+            {
+                ShowHighlight();
+            }
         }
 
         private static void OnPicked(int index)
@@ -1202,9 +1231,18 @@ namespace Stavebound.UI
             }
 
             // Picking from the dropdown is a choice too, whether it was clicked or chosen with Enter in its
-            // open list — it re-aims at once, like a click on a row.
+            // open list — it follows the same setting as a click on a row.
             _highlight = index;
-            Commit();
+
+            if (StaveboundConfig.ClickPicksPortal.Value)
+            {
+                Commit();
+            }
+            else
+            {
+                ShowHighlight();
+                Unfocus();
+            }
         }
 
         /// <summary>

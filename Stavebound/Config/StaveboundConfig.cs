@@ -118,6 +118,7 @@ namespace Stavebound.Config
         private const string SectionCompatibility = "4 - Compatibility";
         private const string SectionTransit = "6 - Transit";
         private const string SectionDiagnostics = "7 - Diagnostics";
+        private const string SectionSelector = "8 - Selector";
 
         // -- Travel ----------------------------------------------------------------------------
 
@@ -126,6 +127,17 @@ namespace Stavebound.Config
         // just a trap for whoever flips it.
         internal static ConfigEntry<bool> HidePortalNames { get; private set; }
         internal static ConfigEntry<ReaimPermission> Reaim { get; private set; }
+
+        // -- Selector ----------------------------------------------------------------------------
+
+        // How the mouse drives the destination selector. Local, never synced: these are how one player
+        // likes to click, and none of them changes what any portal permits. A new section rather than a
+        // renamed "5 - Selector keys", because renaming a section orphans every key already bound in it.
+        internal static ConfigEntry<bool> ClickPicksPortal { get; private set; }
+        internal static ConfigEntry<bool> MapClickPicksPortal { get; private set; }
+        internal static ConfigEntry<bool> HoverPreviewsOnMap { get; private set; }
+        internal static ConfigEntry<bool> WheelScrollsList { get; private set; }
+        internal static ConfigEntry<bool> ColourHomePortal { get; private set; }
 
         // -- Clearance -------------------------------------------------------------------------
 
@@ -376,6 +388,46 @@ namespace Stavebound.Config
                                       "clearance has been confirmed across a real network; turn it on " +
                                       "before reporting anything about portals not agreeing between " +
                                       "machines, because the first question will be what this says."));
+
+            // -- Selector ------------------------------------------------------------------------
+
+            ClickPicksPortal = config.Bind(
+                SectionSelector,
+                "ClickPicksPortal",
+                true,
+                new ConfigDescription("Clicking a destination in the selector's list, or picking one from its " +
+                                      "dropdown, re-aims the portal at once. Off: a click only highlights, and " +
+                                      "the confirm key re-aims. Arrow keys and gamepad only ever highlight."));
+
+            MapClickPicksPortal = config.Bind(
+                SectionSelector,
+                "MapClickPicksPortal",
+                true,
+                new ConfigDescription("Clicking a portal's pin on the map re-aims at it and closes the map. Off: " +
+                                      "clicking a pin only highlights it. A click that lands on no pin does " +
+                                      "nothing either way."));
+
+            HoverPreviewsOnMap = config.Bind(
+                SectionSelector,
+                "HoverPreviewsOnMap",
+                true,
+                new ConfigDescription("Hovering a destination in the list pans the map to it, and the map returns " +
+                                      "to the highlighted one when the pointer leaves the list. Never re-aims."));
+
+            WheelScrollsList = config.Bind(
+                SectionSelector,
+                "WheelScrollsList",
+                true,
+                new ConfigDescription("The mouse wheel over the selector's list moves the highlight, and the map " +
+                                      "does not zoom. Off: the wheel zooms the map wherever the pointer is."));
+
+            ColourHomePortal = config.Bind(
+                SectionSelector,
+                "ColourHomePortal",
+                true,
+                new ConfigDescription("The portal nearest your bed - where you respawn - is drawn in its own " +
+                                      "colour in the list and on the map. Nothing is coloured until you have " +
+                                      "a bed set in this world."));
         }
 
         /// <summary>

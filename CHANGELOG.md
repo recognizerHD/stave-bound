@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+**The destination selector works with a mouse.** Each destination is a clickable
+row with its clearance chips right-aligned; a dropdown lists them all; the key
+hints along the bottom are buttons; the wheel scrolls the list without zooming the
+map; and hovering a row pans the map to it. Arrow keys and gamepad still highlight
+and the confirm key still picks — a click picks straight away, and clicking a
+portal's pin on the map picks it and closes the map.
+
+**Your home portal stands out.** The portal nearest your bed is coloured in the
+list and on the map.
+
+Every mouse behaviour is a per-player setting under `8 - Selector`.
+
+**`stave_players`**, for diagnosing a player who looks left behind at a portal
+after going through. Needs the console, not `devcommands`.
+
+Fixed: with the cargo filter emptying the list, pressing confirm or the arrow keys
+crashed. Fixed: closing the selector could leave the map open, because it checked
+a flag the game never changes.
+
 ## 1.0.0 — 2026-09-10
 
 **Valheim 1.0 compatibility. 0.9.0 does not run on 1.0 — update.**
