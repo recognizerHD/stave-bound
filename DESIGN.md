@@ -239,10 +239,13 @@ re-aiming.
 
 The portal **nearest your bed** — your home, where you respawn — is drawn in its own colour, in the
 list and on its map pin. Not the world's starting spawn: home is where a player chose to sleep. The bed
-lives in the local player profile, so each player sees their own home portal.
+lives in the local player profile, so each player sees their own home portal. Every other destination's
+pin is orange, which also separates the selector's pins from pins a player placed by hand — both use
+the same icon. The list keeps its own colours: there, orange already means the highlighted row.
 
 Every mouse behaviour above is a per-player setting under `8 - Selector` — click to pick, click a pin
-to pick, hover to preview, the wheel scrolling the list, and the home colour — local and never synced,
+to pick, hover to preview, the wheel scrolling the list, the home colour and the orange pins — local
+and never synced,
 since none of them changes what a portal permits.
 
 They answer different questions, which is why neither replaces the other. The map answers *where is

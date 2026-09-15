@@ -242,13 +242,7 @@ namespace Stavebound.UI
                 return;
             }
 
-            // The map repaints every pin's icon colour each frame in UpdatePins, which runs earlier in the
-            // same Minimap.Update this postfix follows — so the home tint has to be laid on after it,
-            // every frame, or it is gone before it is ever drawn.
-            if (_homePin?.m_iconElement != null)
-            {
-                _homePin.m_iconElement.color = HomeColour;
-            }
+            TintPins();
 
             if (PickerIsOpen())
             {
@@ -632,6 +626,41 @@ namespace Stavebound.UI
                 if (portal.Pid == _homePid)
                 {
                     _homePin = pin;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Colours the selector's own pins: the home portal in its colour, every other destination
+        /// orange.
+        /// <para>
+        /// Every frame, because the map repaints every pin's icon colour each frame in <c>UpdatePins</c>,
+        /// which runs earlier in the same <c>Minimap.Update</c> this is driven from — a colour laid on
+        /// once is gone before it is ever drawn. Only pins this selector added are touched; the player's
+        /// own pins, which use the same icon, keep the map's colours, and the orange is what tells the
+        /// two apart.
+        /// </para>
+        /// </summary>
+        private static void TintPins()
+        {
+            bool orange = StaveboundConfig.ColourPortalPins.Value;
+            Color pinColour = GUIManager.Instance.ValheimOrange;
+
+            foreach (Minimap.PinData pin in Pins)
+            {
+                if (pin?.m_iconElement == null)
+                {
+                    // Not drawn yet, or scrolled out of the map's view and released.
+                    continue;
+                }
+
+                if (pin == _homePin)
+                {
+                    pin.m_iconElement.color = HomeColour;
+                }
+                else if (orange)
+                {
+                    pin.m_iconElement.color = pinColour;
                 }
             }
         }

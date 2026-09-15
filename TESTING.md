@@ -47,9 +47,12 @@ right-aligned, and real buttons for the footer. Built against 1.0 and Jotunn 2.3
 - [ ] **The portal nearest your bed** has a light-blue name in the list — still blue when highlighted —
       and a light-blue pin on the map. With no bed set in the world, nothing is coloured; if the portal
       you are re-aiming is itself the nearest, nothing is coloured either
+- [ ] **Every other destination's pin is orange** while the selector is open, and pins you placed
+      yourself keep their usual colour
 - [ ] **Each setting under `8 - Selector` switches its behaviour off**: `ClickPicksPortal` (rows and
       dropdown then only highlight), `MapClickPicksPortal` (a pin click then only highlights),
-      `HoverPreviewsOnMap`, `WheelScrollsList` (the map then zooms under the list), `ColourHomePortal`
+      `HoverPreviewsOnMap`, `WheelScrollsList` (the map then zooms under the list), `ColourHomePortal`,
+      `ColourPortalPins`
 - [ ] Turn the cargo filter on while carrying something nothing accepts: the empty message shows,
       previous/next/confirm grey out, and **pressing confirm does nothing** rather than throwing. That
       last one was a real crash on the keys alone before this change, and so was stepping with the

@@ -138,6 +138,7 @@ namespace Stavebound.Config
         internal static ConfigEntry<bool> HoverPreviewsOnMap { get; private set; }
         internal static ConfigEntry<bool> WheelScrollsList { get; private set; }
         internal static ConfigEntry<bool> ColourHomePortal { get; private set; }
+        internal static ConfigEntry<bool> ColourPortalPins { get; private set; }
 
         // -- Clearance -------------------------------------------------------------------------
 
@@ -428,6 +429,15 @@ namespace Stavebound.Config
                 new ConfigDescription("The portal nearest your bed - where you respawn - is drawn in its own " +
                                       "colour in the list and on the map. Nothing is coloured until you have " +
                                       "a bed set in this world."));
+
+            ColourPortalPins = config.Bind(
+                SectionSelector,
+                "ColourPortalPins",
+                true,
+                new ConfigDescription("While the selector is open, every destination's pin on the map is drawn " +
+                                      "orange, which also tells them apart from pins you placed yourself - they " +
+                                      "use the same icon. The home portal stays its own colour. Off: pins keep " +
+                                      "the map's usual colour."));
         }
 
         /// <summary>

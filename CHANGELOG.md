@@ -10,7 +10,8 @@ and the confirm key still picks — a click picks straight away, and clicking a
 portal's pin on the map picks it and closes the map.
 
 **Your home portal stands out.** The portal nearest your bed is coloured in the
-list and on the map.
+list and on the map, and every other destination's pin is orange while you choose,
+so the selector's pins no longer blend in with the ones you placed yourself.
 
 Every mouse behaviour is a per-player setting under `8 - Selector`.
 

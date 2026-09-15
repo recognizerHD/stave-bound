@@ -104,6 +104,7 @@ playable on a pad.
 | `ClickPicksPortal` | On by default. Clicking a destination in the list or dropdown picks it at once; off, a click only highlights and the confirm key picks |
 | `MapClickPicksPortal` | On by default. Clicking a portal's pin on the map picks it and closes the map; off, it only highlights |
 | `ColourHomePortal` | On by default. The portal nearest your bed is drawn in its own colour |
+| `ColourPortalPins` | On by default. Destination pins on the map are orange while choosing, so they stand out from your own pins |
 
 Two resources are **sealed**: the Deep North's Bloodgold and Petrified Tissue. No stave carries them
 and none ever will — the base game moves those by stone portal and nothing else, and this mod leaves
