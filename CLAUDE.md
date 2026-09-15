@@ -28,14 +28,17 @@ destination, the feedback that explains both, and optional seamless transit.
 
 Working: the server-swept portal registry (`Portals/`), `stave_pid` identity that survives a relog,
 one-way targets honoured by a `TeleportWorld.Teleport` prefix, the map-and-list selector with
-clearance chips and a cargo filter (`UI/`), the `ObjectDB` tier map (`Tiers/`), six stave pieces
-cloned from a dungeon prop with per-tier tinted cores (`Staves/`), the ten-second site sweep, the
-travel gate with named refusals (`Travel/`), the inventory overlay, build-mode range and binding
-feedback, and a trip that ends when loading does rather than on vanilla's timer.
+clearance chips, a cargo filter and full mouse support — clickable rows, dropdown, button footer,
+wheel, hover preview and map-pin picking, each a per-player setting under `8 - Selector` (`UI/`),
+the `ObjectDB` tier map (`Tiers/`), six stave pieces cloned from a dungeon prop with per-tier tinted
+cores (`Staves/`), the ten-second site sweep, the travel gate with named refusals (`Travel/`), the
+inventory overlay, build-mode range and binding feedback, and a trip that ends when loading does
+rather than on vanilla's timer.
 
 Console commands, all echoing to the log: `stave_portals`, `stave_aim`, `stave_net`,
-`stave_items`, `stave_prefabs` / `stave_inspect` / `stave_preview`. Reach for those before
-inferring anything about a running game — several rounds were lost this way already.
+`stave_players`, `stave_items`, `stave_prefabs` / `stave_inspect` / `stave_preview`. Reach for those
+before inferring anything about a running game — several rounds were lost this way already. None needs
+`devcommands`, only the console.
 
 **Clearance and `MaterialFlow` have both been confirmed on a real network**, which were the last two
 correctness gates. `LogNetworkSync` now defaults off.
@@ -43,6 +46,10 @@ correctness gates. `LogNetworkSync` now defaults off.
 What remains is judgement, not correctness: the §4 costs are placeholders that have never been tuned,
 and whether `Both` is the right shipped default is an open question about how a long game feels. Those
 and the smaller standing gaps live in `TESTING.md` — read it before proposing anything be called done.
+
+One open bug report: an observer can see a traveller's body left standing at the departure portal.
+Suspected to be the game's area streaming rather than the mod, and not yet proven either way —
+`stave_players` exists to settle it. See TESTING.md §1.
 
 Deferred as niceties: destination thumbnails and selector favourites.
 

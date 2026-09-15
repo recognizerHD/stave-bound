@@ -675,6 +675,37 @@ entry and its code paths still exist.
 `Piece.m_isUpgrade` earns the up-arrow overlay: `BuildUiPieceButton.Setup` reads it and activates
 `m_upgradeArrow`.
 
+#### Input, pins, spawns and commands on 1.0
+
+Read off the 1.0 assemblies while building mouse support into the selector.
+
+- **1.0 reads input through Unity's Input System.** `ZInput` wraps it — defined in `assembly_utils`, not
+  `assembly_valheim`, so point the dumper there — and vanilla's own `Minimap.OnMapLeftClick` takes the
+  pointer from `ZInput.pointerPosition`. Read the pointer and the wheel through `ZInput`, never
+  `UnityEngine.Input`, which is not guaranteed to report anything under it.
+- **The wheel has exactly one reader in the game:** `Minimap.UpdateMap`, through
+  `ZInput.GetMouseScrollWheel()`, and `UpdateMap` is called only from `Minimap.Update`. That is what
+  makes intercepting the read a clean way to share the wheel with the selector.
+- **`Minimap.PinInteractRadius`**, the map's pin-click distance (`m_removeRadius × LargeZoom × 2`, and
+  ×1.3 more on touch), has a **private** getter. Reach it through `AccessTools.PropertyGetter`.
+- **`Minimap.UpdatePins` repaints every pin icon's colour every frame**, inside `Minimap.Update`. Any
+  tint has to be reapplied each frame, after it.
+- **`Minimap.m_mode` is what says the large map is open**, not `m_mapLarge.activeSelf`: `SetMapMode`
+  toggles `m_largeRoot` and leaves `m_mapLarge` alone.
+- **Spawns.** The world's starting spawn is `ZoneSystem.GetLocationIcon(Game.m_StartLocation, …)`,
+  exactly as `Game.FindSpawnPoint` finds it. A player's bed is `PlayerProfile.HaveCustomSpawnPoint()` /
+  `GetCustomSpawnPoint()`, held in the local profile. The home portal uses the bed.
+- **Unity's legacy `Dropdown` has no public "is open" flag.** Its private `m_Blocker` is non-null exactly
+  while the list shows, and `Dropdown.OnDisable` destroys the list and the blocker — so destroying a
+  panel with the list open strands neither.
+- **Animation does not travel with position.** `ZSyncAnimation.SetTrigger` is an RPC to every peer
+  regardless of distance, while position is in the player's ZDO, which the server streams only to peers
+  nearby. A distant player's emotes can play on a body whose position has gone stale.
+- **Console commands need no `devcommands`.** Jotunn's `CommandManager.CreateVanillaCommand` passes the
+  command's `IsCheat` (false unless overridden) and a hard-coded `hideBehindDevCommands: false`. The F5
+  console itself is enabled by the `-console` launch argument or by 1.0's own gameplay settings
+  (`GameplaySettings.OnConsoleToggle`).
+
 **`TeleportWorld`** — fields `m_activationRange`, `m_exitDistance`, `m_allowAllItems`, `m_proximityRoot`;
 methods `GetHoverText()`, `GetHoverName()`, `Interact(Humanoid, bool, bool)`, `UseItem(Humanoid, ItemData)`,
 `Teleport(Player)`, `GetText()` / `SetText(string)` (it is a `TextReceiver`), and private

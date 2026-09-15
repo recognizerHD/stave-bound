@@ -25,7 +25,8 @@ after going through. Needs the console, not `devcommands`.
 
 Fixed: with the cargo filter emptying the list, pressing confirm or the arrow keys
 crashed. Fixed: closing the selector could leave the map open, because it checked
-a flag the game never changes.
+a flag the game never changes. Fixed: clicking the map to choose a destination read
+the pointer through Unity's old input API, which the game stopped using in 1.0.
 
 ## 1.0.0 — 2026-09-10
 

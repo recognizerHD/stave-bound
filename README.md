@@ -88,6 +88,19 @@ loose once you have played it, `Receive` is a one-line change and restores the o
 All rebindable under `5 - Selector keys`, each with a gamepad button beside it. The selector is fully
 playable on a pad.
 
+**Or use the mouse.** Keys browse and the confirm key chooses; a click chooses straight away.
+
+| | |
+|---|---|
+| **Click** a destination, or pick one from the dropdown | Choose it |
+| **Click** a portal's pin on the map | Choose it and close the map |
+| **Mouse wheel** over the list | Move the highlight — the map does not zoom |
+| **Hover** a destination | Show it on the map without choosing it |
+| The buttons along the bottom | Do the same as their keys |
+
+The portal nearest your bed is drawn in light blue; the other destinations' pins are orange while you
+choose. Each of these can be switched off under `8 - Selector`.
+
 ## Settings worth knowing
 
 | Setting | Does |
@@ -105,6 +118,8 @@ playable on a pad.
 | `MapClickPicksPortal` | On by default. Clicking a portal's pin on the map picks it and closes the map; off, it only highlights |
 | `ColourHomePortal` | On by default. The portal nearest your bed is drawn in its own colour |
 | `ColourPortalPins` | On by default. Destination pins on the map are orange while choosing, so they stand out from your own pins |
+| `HoverPreviewsOnMap` | On by default. Hovering a destination shows it on the map |
+| `WheelScrollsList` | On by default. The mouse wheel over the list moves the highlight instead of zooming the map |
 
 Two resources are **sealed**: the Deep North's Bloodgold and Petrified Tissue. No stave carries them
 and none ever will — the base game moves those by stone portal and nothing else, and this mod leaves
