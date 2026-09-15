@@ -9,9 +9,9 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Suspected bug — a traveller's body left at the departure portal
+## 1. Diagnosed — a traveller's body left at the departure portal
 
-**Not fixed, not diagnosed; flagged to look into later.** When another player walks through a portal,
+**Diagnosed as the game's, not fixed.** When another player walks through a portal,
 an observer keeps seeing their body standing at the departure portal. The traveller really has gone —
 they are on the other side — and the leftover body **keeps animating whatever they do there** (emotes,
 actions) while never changing position. It disappears once the observer teleports themselves.
@@ -33,8 +33,33 @@ What is known so far:
   vanilla: the `TeleportWorld.Teleport` prefix transcribes 1.0's method call for call, and the flag
   seamless transit clears is read elsewhere only by the traveller's own loading screen.
 
-So the best guess is a Valheim 1.0 bug — but that is a code reading, which is exactly what this file
-says not to trust.
+**Evidence, 2026-09-15 — `STALE COPY`.** A two-player run with the leftover body in view. On the
+watcher's machine the traveller was drawn and held at **(391, −429)**, beside the watcher, while the
+server's player list put them at **(2544, 379), 2,300 m away**; their data revision sat at 23790,
+unchanged across the three-second watch. The watcher's own entry was fully consistent.
+
+What that settles: **the traveller's game did report the teleport** — the server knew where they had
+gone — so the teleport path, the one place this could have been Stavebound, is cleared. What went
+wrong is entirely on the watcher's side: their copy of the traveller's ZDO froze at the portal once the
+server stopped streaming it, and the game never culled the body. That is the game's area streaming.
+
+**A fix is possible client-side, using only the game's own machinery**, both halves read off the 1.0
+assembly:
+
+- `ZDOMan.RequestZDO` routes to the server's `RPC_RequestZDO`, which calls `ForceSendZDO` for that
+  peer — it sends the ZDO **regardless of whether it is in the requester's area**. The portal code
+  already relies on this to fetch distant portals.
+- `ZNetScene.CreateDestroyObjects` lists ZDOs near the reference position with `FindSectorObjects` and
+  passes them to `RemoveObjects`, which destroys any instance not among them. A copy refreshed with the
+  traveller's real, distant position falls out of that list, and the body is removed.
+
+Proposed: every couple of seconds, per other player — request a fresh copy when the server's list puts
+them well away from the held copy; and, since that list is empty for players hiding their map position,
+also when a drawn player's data has not changed for several seconds, which costs nothing for someone
+merely standing still nearby. Rate-limited per player, behind a setting. **Not built.** The one untested
+step is that the cull follows promptly once the fresh copy lands.
+
+The mod-disabled test below would still make "not ours" certain rather than strongly evidenced.
 
 **Collecting the evidence — `stave_players`.** Needs the F5 console switched on (in 1.0's settings, or
 the `-console` launch option) but **not** `devcommands`: it is registered as neither a cheat nor hidden
