@@ -9,6 +9,6 @@ namespace Stavebound
     {
         internal const string Guid = "com.recognizerhd.stavebound";
         internal const string Name = "Stavebound";
-        internal const string Version = "1.1.0";
+        internal const string Version = "1.1.1";
     }
 }

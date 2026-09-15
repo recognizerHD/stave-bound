@@ -47,9 +47,11 @@ What remains is judgement, not correctness: the §4 costs are placeholders that 
 and whether `Both` is the right shipped default is an open question about how a long game feels. Those
 and the smaller standing gaps live in `TESTING.md` — read it before proposing anything be called done.
 
-One open bug report: an observer can see a traveller's body left standing at the departure portal.
-Suspected to be the game's area streaming rather than the mod, and not yet proven either way —
-`stave_players` exists to settle it. See TESTING.md §1.
+A traveller's body used to be left standing at the departure portal on everyone else's screen.
+`stave_players` proved it: the server knew where the traveller had gone, so their own game reported the
+move — it was the watcher's copy going stale once the server stopped streaming it, the game's area
+streaming rather than anything here. Fixed client-side anyway, in `Travel/StaleTravellers.cs`, because
+portals are the one way to leave an area without crossing its edge. Built, not yet played — TESTING.md §1.
 
 Deferred as niceties: destination thumbnails and selector favourites.
 

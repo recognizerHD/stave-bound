@@ -23,6 +23,7 @@ namespace Stavebound.Patches
         {
             PortalRegistry.OnWorldStart();
             SiteSweep.Start();
+            StaleTravellers.OnWorldStart();
         }
 
         // Private in the game, which Harmony does not care about.
@@ -32,6 +33,7 @@ namespace Stavebound.Patches
         {
             PortalRegistry.OnWorldEnd();
             SiteSweep.Stop();
+            StaleTravellers.OnWorldEnd();
             PlacementFeedback.Reset();
             ApproachWarning.Reset();
             DestinationSelector.Reset();

@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.1.1 — 2026-09-15
+
+**A player who walks through a portal no longer leaves their body standing there**
+on everyone else's screen, still emoting, until those players teleport somewhere
+themselves.
+
+That was the game's doing, not this mod's: your position travels only to players
+near you, and a portal is the one way to leave an area without crossing its edge,
+so everyone watching keeps their last copy of you — at the portal — forever. It
+shows up here because portals are what this mod is for, so it is fixed here.
+Nothing is faked: your game asks the server for a fresh copy of anyone who looks
+stuck, and the game then clears the body itself. `ClearLeftBehindBodies` turns it
+off.
+
+**Safe to update alone.** This is a patch release, so 1.1.1 and 1.1.0 still
+connect to each other. The fix is entirely on your own machine and asks nothing of
+the server, which does not need updating — or even to be running this mod.
+
 ## 1.1.0 — 2026-09-14
 
 **Update the server and every player together.** Stavebound refuses to connect

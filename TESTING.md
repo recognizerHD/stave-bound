@@ -9,10 +9,10 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Diagnosed — a traveller's body left at the departure portal
+## 1. The fix for the body left at a portal — built, not run
 
-**Diagnosed as the game's, not fixed.** When another player walks through a portal,
-an observer keeps seeing their body standing at the departure portal. The traveller really has gone —
+**Diagnosed, and now fixed — the fix is what needs testing.** When another player walks through a
+portal, an observer keeps seeing their body standing at the departure portal. The traveller really has gone —
 they are on the other side — and the leftover body **keeps animating whatever they do there** (emotes,
 actions) while never changing position. It disappears once the observer teleports themselves.
 
@@ -53,13 +53,29 @@ assembly:
   passes them to `RemoveObjects`, which destroys any instance not among them. A copy refreshed with the
   traveller's real, distant position falls out of that list, and the body is removed.
 
-Proposed: every couple of seconds, per other player — request a fresh copy when the server's list puts
-them well away from the held copy; and, since that list is empty for players hiding their map position,
-also when a drawn player's data has not changed for several seconds, which costs nothing for someone
-merely standing still nearby. Rate-limited per player, behind a setting. **Not built.** The one untested
-step is that the cull follows promptly once the fresh copy lands.
+**Built** as `Travel/StaleTravellers.cs`: every two seconds, per other player, request a fresh copy
+when the server's list puts them more than 100 m from the held copy — and, since that list carries no
+position for anyone hiding theirs, also when a drawn player's copy has not changed for five seconds,
+which costs one small request and changes nothing for someone merely standing still nearby. At most one
+request per player per ten seconds, behind `ClearLeftBehindBodies`. Client-side only: the server holds
+the originals, so it can never be the one with a stale copy.
 
-The mod-disabled test below would still make "not ours" certain rather than strongly evidenced.
+To test — two players, and the watcher wants `LogNetworkSync = true` to see the sweep narrate itself:
+
+- [ ] Traveller goes through a portal. **The body they leave behind disappears within a few seconds**
+      rather than standing there until the watcher teleports
+- [ ] `stave_players` on the watcher no longer reports `STALE COPY` once it has gone
+- [ ] It also works for a traveller with **"Visible to other players" off** — that is the weaker
+      detection path, the one that guesses from a copy that has stopped changing
+- [ ] The watcher's log shows the `[stale]` line naming who was refreshed, and **not** a stream of them
+- [ ] Players standing still nearby are **not** disturbed: nobody flickers, disappears, or is drawn in
+      the wrong place
+- [ ] `ClearLeftBehindBodies = false` brings the old behaviour back
+- [ ] **Against a 1.1.0 server**, which is the point of the patch number: a 1.1.1 client still connects,
+      and the fix works without the server being updated
+
+The mod-disabled test below would still make "not ours" certain rather than strongly evidenced, though
+the evidence above is already strong.
 
 **Collecting the evidence — `stave_players`.** Needs the F5 console switched on (in 1.0's settings, or
 the `-console` launch option) but **not** `devcommands`: it is registered as neither a cheat nor hidden

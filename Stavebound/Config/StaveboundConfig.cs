@@ -127,6 +127,7 @@ namespace Stavebound.Config
         // just a trap for whoever flips it.
         internal static ConfigEntry<bool> HidePortalNames { get; private set; }
         internal static ConfigEntry<ReaimPermission> Reaim { get; private set; }
+        internal static ConfigEntry<bool> ClearLeftBehindBodies { get; private set; }
 
         // -- Selector ----------------------------------------------------------------------------
 
@@ -204,6 +205,16 @@ namespace Stavebound.Config
                 "HidePortalNames",
                 false,
                 new ConfigDescription("Hide portal names in the map selector. Local to you."));
+
+            ClearLeftBehindBodies = config.Bind(
+                SectionTravel,
+                "ClearLeftBehindBodies",
+                true,
+                new ConfigDescription("Clear the body another player leaves standing at a portal after they " +
+                                      "travel. The game stops sending you their position once they are far " +
+                                      "away, so your copy can be left at the portal forever; this asks the " +
+                                      "server for a fresh one and the game removes the body itself. Local to " +
+                                      "you, and needs nothing of the server."));
 
             Reaim = config.Bind(
                 SectionTravel,
