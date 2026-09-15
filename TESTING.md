@@ -9,101 +9,7 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. The fix for the body left at a portal — built, not run
-
-**Diagnosed, and now fixed — the fix is what needs testing.** When another player walks through a
-portal, an observer keeps seeing their body standing at the departure portal. The traveller really has gone —
-they are on the other side — and the leftover body **keeps animating whatever they do there** (emotes,
-actions) while never changing position. It disappears once the observer teleports themselves.
-
-What is known so far:
-
-- **The animation still updating proves less than it seems.** An earlier note here said it ruled out
-  the obvious theory; it does not. `ZSyncAnimation.SetTrigger` sends emotes and actions as an RPC to
-  every peer regardless of distance, while position travels in the player's ZDO, which the server
-  only streams to peers nearby. So a body that keeps emoting is entirely consistent with the observer's
-  copy of that ZDO having gone stale.
-- **Leading theory:** the traveller jumps out of the observer's area, the server stops sending the
-  observer that ZDO, and the observer's last copy still places the player at the portal — so the game
-  never culls the instance, and broadcast animations keep playing on it. Teleporting away moves the
-  observer's own area, which is why that clears it.
-- Position syncs through `ZSyncTransform` and ZDO streaming, animation through `ZSyncAnimation`.
-  **The mod touches none of them.**
-- Both places Stavebound is in the teleport path were checked against the 1.0 assembly and match
-  vanilla: the `TeleportWorld.Teleport` prefix transcribes 1.0's method call for call, and the flag
-  seamless transit clears is read elsewhere only by the traveller's own loading screen.
-
-**Evidence, 2026-09-15 — `STALE COPY`.** A two-player run with the leftover body in view. On the
-watcher's machine the traveller was drawn and held at **(391, −429)**, beside the watcher, while the
-server's player list put them at **(2544, 379), 2,300 m away**; their data revision sat at 23790,
-unchanged across the three-second watch. The watcher's own entry was fully consistent.
-
-What that settles: **the traveller's game did report the teleport** — the server knew where they had
-gone — so the teleport path, the one place this could have been Stavebound, is cleared. What went
-wrong is entirely on the watcher's side: their copy of the traveller's ZDO froze at the portal once the
-server stopped streaming it, and the game never culled the body. That is the game's area streaming.
-
-**A fix is possible client-side, using only the game's own machinery**, both halves read off the 1.0
-assembly:
-
-- `ZDOMan.RequestZDO` routes to the server's `RPC_RequestZDO`, which calls `ForceSendZDO` for that
-  peer — it sends the ZDO **regardless of whether it is in the requester's area**. The portal code
-  already relies on this to fetch distant portals.
-- `ZNetScene.CreateDestroyObjects` lists ZDOs near the reference position with `FindSectorObjects` and
-  passes them to `RemoveObjects`, which destroys any instance not among them. A copy refreshed with the
-  traveller's real, distant position falls out of that list, and the body is removed.
-
-**Built** as `Travel/StaleTravellers.cs`: every two seconds, per other player, request a fresh copy
-when the server's list puts them more than 100 m from the held copy — and, since that list carries no
-position for anyone hiding theirs, also when a drawn player's copy has not changed for five seconds,
-which costs one small request and changes nothing for someone merely standing still nearby. At most one
-request per player per ten seconds, behind `ClearLeftBehindBodies`. Client-side only: the server holds
-the originals, so it can never be the one with a stale copy.
-
-To test — two players, and the watcher wants `LogNetworkSync = true` to see the sweep narrate itself:
-
-- [ ] Traveller goes through a portal. **The body they leave behind disappears within a few seconds**
-      rather than standing there until the watcher teleports
-- [ ] `stave_players` on the watcher no longer reports `STALE COPY` once it has gone
-- [ ] It also works for a traveller with **"Visible to other players" off** — that is the weaker
-      detection path, the one that guesses from a copy that has stopped changing
-- [ ] The watcher's log shows the `[stale]` line naming who was refreshed, and **not** a stream of them
-- [ ] Players standing still nearby are **not** disturbed: nobody flickers, disappears, or is drawn in
-      the wrong place
-- [ ] `ClearLeftBehindBodies = false` brings the old behaviour back
-- [ ] **Against a 1.1.0 server**, which is the point of the patch number: a 1.1.1 client still connects,
-      and the fix works without the server being updated
-
-The mod-disabled test below would still make "not ours" certain rather than strongly evidenced, though
-the evidence above is already strong.
-
-**Collecting the evidence — `stave_players`.** Needs the F5 console switched on (in 1.0's settings, or
-the `-console` launch option) but **not** `devcommands`: it is registered as neither a cheat nor hidden
-behind dev commands. It watches for three seconds, then prints each player three ways — where they are
-drawn, where this machine's data says, and where the server's player list says — with a verdict line.
-
-- [ ] The traveller ticks **"Visible to other players"** on their map first, or the server column is empty
-- [ ] Traveller walks through a portal. While the body is still visible, the **watcher** runs
-      `stave_players`; the **traveller** runs it too
-- [ ] Both copy the output — it is also in each machine's `BepInEx/LogOutput.log`
-
-What the verdicts mean:
-
-| Verdict | Meaning | Whose |
-|---|---|---|
-| `STALE COPY` on the watcher | The watcher stopped being sent the traveller's position after they left its area, and never cleaned up the old body | The game's streaming; fixable client-side |
-| `BODY NOT MOVED` on the watcher | The position arrived; the body was never moved to it | Almost certainly the game's; fixable by snapping |
-| `YOUR OWN data is ...m from where the server says` on the traveller | The traveller's own game never reported the move | **Potentially ours** — the teleport path |
-
-The deciding test, which settles whose it is regardless:
-
-- [ ] Disable Stavebound for **every** player **and** the server (the mod requires all of them to match,
-      so a half-modded setup will not connect), pair two portals by name, and watch someone go through.
-      Body left behind → the game's. Gone → ours
-- [ ] Note **when** the body disappears on its own, if it ever does, and whether seamless transit being
-      on for the traveller makes any difference
-
-## 2. Balance — wants sessions, not checklists
+## 1. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -117,7 +23,7 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 3. Standing gaps
+## 2. Standing gaps
 
 Smaller, older, and none of them blocking.
 
@@ -134,6 +40,35 @@ Smaller, older, and none of them blocking.
 ## Confirmed
 
 Kept as a record of what the tests were, so a regression has something to be measured against.
+
+### The body left standing at a portal — diagnosed, fixed, passed
+
+A traveller who walked through a portal was left drawn at it on every other player's screen, still
+emoting whatever they did on the far side, until the watcher teleported somewhere themselves.
+
+**Not this mod's fault, and the measurement is what said so.** `stave_players` caught it: the watcher
+drew and held the traveller at (391, −429) beside them, while the server's player list had the
+traveller 2,300 m away at (2544, 379), their ZDO revision frozen across a three-second watch. The
+server knowing the new position means the traveller's own game reported the teleport — clearing the
+teleport path, the one place this could have been ours. A player's position is streamed only to peers
+near them, and a portal is the one way to leave an area without crossing its edge, so the watcher's
+last copy stays at the portal forever and the game never culls it. Emotes keep playing on it because
+`ZSyncAnimation.SetTrigger` is an RPC to every peer regardless of distance.
+
+**Fixed here anyway**, in `Travel/StaleTravellers.cs`, since portals are what this mod is for.
+Clients sweep every two seconds and call `ZDOMan.RequestZDO` for any player who looks stuck; the
+server force-sends that ZDO whatever the distance, the refreshed position falls outside the sectors
+`ZNetScene.CreateDestroyObjects` gathers, and the game removes the body itself. Suspect means the
+server's list puts them 100 m or more from the held copy, or — for players hiding their map position —
+a drawn copy unchanged for five seconds, which is a guess made safe by costing one request per ten
+seconds and changing nothing when wrong. `ClearLeftBehindBodies` turns it off.
+
+Shipped in 1.1.1, deliberately a patch release: `VersionStrictness.Minor` pins major.minor, so a
+1.1.1 client still joins a 1.1.0 server — which is how this was tested, against a server that was
+never updated and never needed to be.
+
+The mod-disabled comparison was never run. The evidence above settled ownership without it: a stale
+copy on the watcher, with the server and the traveller both correct.
 
 ### The mouse-driven selector — passed
 

@@ -51,7 +51,8 @@ A traveller's body used to be left standing at the departure portal on everyone 
 `stave_players` proved it: the server knew where the traveller had gone, so their own game reported the
 move — it was the watcher's copy going stale once the server stopped streaming it, the game's area
 streaming rather than anything here. Fixed client-side anyway, in `Travel/StaleTravellers.cs`, because
-portals are the one way to leave an area without crossing its edge. Built, not yet played — TESTING.md §1.
+portals are the one way to leave an area without crossing its edge. Fixed and confirmed in play, in
+1.1.1 — see TESTING.md's record.
 
 Deferred as niceties: destination thumbnails and selector favourites.
 
