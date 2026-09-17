@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-09-17
+
+**Everyone has to update together this time.** Stavebound will not connect across
+different minor versions, so a 1.1.x player cannot join a 1.2.0 server, or the
+other way round. Update the server and every player at the same time. (1.1.1 was
+a patch release, which is why that one could be taken up one player at a time.)
 
 **Portal names can be 32 characters**, against vanilla's 10, which runs out fast
 once a world has enough portals to tell apart. The selector's panel widens to
