@@ -1043,13 +1043,13 @@ namespace Stavebound.UI
         /// will grow by.
         /// <para>
         /// Growing the panel rather than squeezing the rows, because the clearance chips keep a fixed
-        /// strip on the right and every extra character has to come from somewhere. The cap is where a
-        /// panel stops being a panel and starts being half the screen; past it, a long name is cut short
-        /// in the list, which is the lesser loss.
+        /// strip on the right and every extra character has to come from somewhere. Sized so the longest
+        /// name the config will accept still fits a row whole: 22 characters past vanilla's ten, at
+        /// roughly three pixels each. The cap is a guard rather than a limit anyone reaches.
         /// </para>
         /// </summary>
-        private const float PerNameCharacter = 6f;
-        private const float MostExtraWidth = 150f;
+        private const float PerNameCharacter = 3f;
+        private const float MostExtraWidth = 70f;
 
         private static float Inner = BaseInner;
         private static float PanelWidth = BaseInner + PanelPadding;

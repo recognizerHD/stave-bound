@@ -11,17 +11,15 @@ the code already convinced someone, and that turned out not to be enough.
 
 ## 1. Longer portal names — built, not run
 
-`PortalNameLength` (default 10, up to 64) is handed to the rename dialog, and the selector's panel
-widens by 6px per character above 10, capped at 150px — so names stay readable to about 35 characters
-before the list truncates instead.
+`PortalNameLength` defaults to 32 and accepts 10 to 32. It is handed to the rename dialog, and the
+panel widens by 3px per allowed character above vanilla's ten — sized so that a 32-character name
+still fits a row whole, which is the claim to check.
 
-- [ ] Raise it, rename a portal, and the dialog accepts the longer name
-- [ ] The selector's panel is wider to match, and long names are readable in the list rather than
-      running into the clearance chips
-- [ ] Past ~35 characters the name is cut short in the list and the panel stops growing — the row
-      should still read sensibly
+- [ ] Rename a portal to a **full 32 characters**, and the dialog accepts it
+- [ ] **It fits the row whole**, with no truncation and no collision with the clearance chips. This is
+      the one that decides whether 32 was the right cap or the panel needs to be wider still
 - [ ] The name shows in full in the dropdown, on the map pin and in refusal messages
-- [ ] Back at 10, the panel is its old width
+- [ ] At 10 the panel is its old width, and the dialog stops at ten characters
 - [ ] It is synced: a client cannot raise it locally, and the server's value wins
 - [ ] A long name survives a relog and reaches other players
 

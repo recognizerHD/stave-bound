@@ -137,6 +137,14 @@ namespace Stavebound.Config
         /// </summary>
         internal const int VanillaPortalNameLength = 10;
 
+        /// <summary>
+        /// The longest name allowed, and the default. Chosen as the point where a name can say what a
+        /// place is without a row of the selector becoming a paragraph — and the panel is sized so that
+        /// a name this long still fits whole, which is what makes it a limit worth enforcing rather
+        /// than a number that quietly starts truncating.
+        /// </summary>
+        internal const int MostPortalNameLength = 32;
+
         // -- Selector ----------------------------------------------------------------------------
 
         // How the mouse drives the destination selector. Local, never synced: these are how one player
@@ -227,14 +235,14 @@ namespace Stavebound.Config
             PortalNameLength = config.Bind(
                 SectionTravel,
                 "PortalNameLength",
-                VanillaPortalNameLength,
-                Synced("How many characters a portal's name may be. Vanilla allows 10, which runs out " +
-                       "quickly once a world has enough portals to need telling apart. The selector's " +
-                       "panel widens to match, up to a point - past roughly 35 characters a name is cut " +
-                       "short in the list rather than the panel growing further. Synced, so every portal " +
-                       "in a world is named under one rule; a player on an older build still types under " +
+                MostPortalNameLength,
+                Synced("How many characters a portal's name may be, between vanilla's 10 and 32. Ten runs " +
+                       "out quickly once a world has enough portals to need telling apart, and 32 is as " +
+                       "long as a name can be while still fitting a row of the selector whole - the panel " +
+                       "widens to match, and never truncates within that range. Synced, so every portal in " +
+                       "a world is named under one rule; a player on an older build still types under " +
                        "vanilla's 10, but sees everyone's longer names normally.",
-                    new AcceptableValueRange<int>(VanillaPortalNameLength, 64)));
+                    new AcceptableValueRange<int>(VanillaPortalNameLength, MostPortalNameLength)));
 
             Reaim = config.Bind(
                 SectionTravel,
