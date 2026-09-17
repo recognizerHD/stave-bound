@@ -19,9 +19,9 @@ both takes iron from anywhere and sends it anywhere — and only two sites that 
 pass iron between them. Which end is asked is the dial most worth knowing about; see
 [Which end pays](#which-end-pays).
 
-You find out while you pack, not at the wall. Your inventory marks the stacks the portal ahead will
-refuse, its runes go dark while you stand there holding them, and walking in names the resource and the
-stave that would carry it.
+You find out while you are packing, rather than only once you try to travel. Your inventory marks the
+stacks the portal ahead will refuse, its runes go dark while you stand there holding them, and if you
+walk in anyway it names the resource and the stave that would carry it.
 
 ## Installing
 
