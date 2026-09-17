@@ -1,10 +1,12 @@
 # Stavebound
 
-**Travel to any portal in the world. What you may carry through is decided by the staves standing
-at the far end — and every stave is bought with a boss's head.**
+**Carrying anything through any portal cheapens the game. Being unable to carry copper through a
+portal long after the Elder is dead is just tedious. Stavebound sits between the two: kill a biome's
+boss, build its stave beside a portal, and that portal will take the biome's ore.**
 
-Interact with a portal and pick your destination off the map. The choice belongs to the portal and
-applies to everyone, until someone re-aims it. Walking in travels.
+Interact with a portal and pick its destination off the map. Where a portal points belongs to the
+portal rather than to you: everyone who walks into it arrives at the same place, until someone re-aims
+it. Walking in still travels, exactly as it always did.
 
 Then the part that makes it more than another any-portal mod. Build an **Elder's Stave** beside a
 portal and that portal will accept copper, tin and bronze. It will still refuse iron — until you go
@@ -17,9 +19,9 @@ both takes iron from anywhere and sends it anywhere — and only two sites that 
 pass iron between them. Which end is asked is the dial most worth knowing about; see
 [Which end pays](#which-end-pays).
 
-You are told before you commit, not at the wall. The portal's runes go dark when it will refuse what
-you are holding, the offending stacks are marked in your inventory while you pack, and walking up to
-the portal gets you the reason in words.
+You find out while you pack, not at the wall. Your inventory marks the stacks the portal ahead will
+refuse, its runes go dark while you stand there holding them, and walking in names the resource and the
+stave that would carry it.
 
 ## Installing
 
@@ -51,13 +53,13 @@ within ten metres of a portal and it binds to it.
 Tiers are independent — a site can accept silver while still refusing iron. Nothing makes you climb
 the ladder in order.
 
-While you are holding one, a beam shows which portal it would bind to, and a circle shows its reach
-if nothing is close enough.
+While you are holding a stave, a beam shows which portal it would bind to, and a circle shows how far
+it reaches when no portal is close enough.
 
 ## Which end pays
 
 `MaterialFlow`, under `2 - Clearance`. One rule for the whole world, set on the server — this is the
-setting that decides how the whole mod feels, so it is worth a minute before you start a save.
+setting that decides how the whole mod feels, so it is worth settling before you start a world.
 
 | | Asks | What that gives you |
 |---|---|---|
@@ -98,8 +100,9 @@ playable on a pad.
 | **Hover** a destination | Show it on the map without choosing it |
 | The buttons along the bottom | Do the same as their keys |
 
-The portal nearest your bed is drawn in light blue; the other destinations' pins are orange while you
-choose. Each of these can be switched off under `8 - Selector`.
+The portal nearest your bed is drawn in light blue, and every other destination's pin is orange while
+you are choosing. Every mouse behaviour above, and both colours, can be switched off under
+`8 - Selector`.
 
 ## Settings worth knowing
 
@@ -125,8 +128,8 @@ choose. Each of these can be switched off under `8 - Selector`.
 
 Two resources are **sealed**: the Deep North's Bloodgold and Petrified Tissue. No stave carries them
 and none ever will — the base game moves those by stone portal and nothing else, and this mod leaves
-that alone rather than selling them back to you for a trophy. `SealedItems` decides which, if you
-disagree.
+that alone rather than selling them back to you for a trophy. If you disagree, `SealedItems` is the
+list of what counts as sealed.
 
 Which item belongs to which stave is configurable too, under `2 - Clearance`. The list of blocked
 items is never hand-written — it is read from the game at startup, so a game update adding a new ore
@@ -136,9 +139,9 @@ cannot break the mod. Anything unrecognised is held to the highest tier and name
 disagreeing about a portal — it narrates every sweep, broadcast and receive, and it is the first
 thing anyone will ask for.
 
-Note that changing a default only affects a config file that does not exist yet. If you have played
-an earlier build, your existing `com.recognizerhd.stavebound.cfg` keeps whatever it was written with
-— edit it, or delete it and let the game write a fresh one.
+A changed default only reaches a config file that has not been written yet. If you have played an
+earlier build, your `com.recognizerhd.stavebound.cfg` keeps the values it already has — edit it, or
+delete it and let the game write a fresh one.
 
 ## Console commands
 
