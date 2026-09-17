@@ -128,6 +128,14 @@ namespace Stavebound.Config
         internal static ConfigEntry<bool> HidePortalNames { get; private set; }
         internal static ConfigEntry<ReaimPermission> Reaim { get; private set; }
         internal static ConfigEntry<bool> ClearLeftBehindBodies { get; private set; }
+        internal static ConfigEntry<int> PortalNameLength { get; private set; }
+
+        /// <summary>
+        /// What vanilla allows a portal to be named, and the baseline the selector's panel is sized
+        /// against. The limit is nothing but the character count handed to the rename dialog, in
+        /// vanilla as much as here.
+        /// </summary>
+        internal const int VanillaPortalNameLength = 10;
 
         // -- Selector ----------------------------------------------------------------------------
 
@@ -215,6 +223,18 @@ namespace Stavebound.Config
                                       "away, so your copy can be left at the portal forever; this asks the " +
                                       "server for a fresh one and the game removes the body itself. Local to " +
                                       "you, and needs nothing of the server."));
+
+            PortalNameLength = config.Bind(
+                SectionTravel,
+                "PortalNameLength",
+                VanillaPortalNameLength,
+                Synced("How many characters a portal's name may be. Vanilla allows 10, which runs out " +
+                       "quickly once a world has enough portals to need telling apart. The selector's " +
+                       "panel widens to match, up to a point - past roughly 35 characters a name is cut " +
+                       "short in the list rather than the panel growing further. Synced, so every portal " +
+                       "in a world is named under one rule; a player on an older build still types under " +
+                       "vanilla's 10, but sees everyone's longer names normally.",
+                    new AcceptableValueRange<int>(VanillaPortalNameLength, 64)));
 
             Reaim = config.Bind(
                 SectionTravel,

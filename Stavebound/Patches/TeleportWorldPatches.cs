@@ -57,7 +57,10 @@ namespace Stavebound.Patches
 
             if (alt)
             {
-                TextInput.instance.RequestText(__instance, "$piece_portal_tag", 10);
+                // The whole of the name limit, in vanilla too: a character count handed to the dialog.
+                // Nothing downstream cares — the name is a plain string on the portal's ZDO.
+                TextInput.instance.RequestText(
+                    __instance, "$piece_portal_tag", StaveboundConfig.PortalNameLength.Value);
                 return false;
             }
 

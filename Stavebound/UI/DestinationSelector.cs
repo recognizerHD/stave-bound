@@ -1030,11 +1030,29 @@ namespace Stavebound.UI
 
         // The panel's layout in its own units, top to bottom. Kept in one place so that moving anything
         // means reading one column of numbers rather than hunting offsets through the builder.
-        private const float PanelWidth = 440f;
         private const float PanelHeight = 530f;
-        private const float Inner = 400f;
         private const float RowHeight = 28f;
         private const float ChipsWidth = 132f;
+
+        /// <summary>The panel's width at vanilla's ten-character names, and the margin around its contents.</summary>
+        private const float BaseInner = 400f;
+        private const float PanelPadding = 40f;
+
+        /// <summary>
+        /// How much wider the panel grows per character allowed beyond vanilla's ten, and the most it
+        /// will grow by.
+        /// <para>
+        /// Growing the panel rather than squeezing the rows, because the clearance chips keep a fixed
+        /// strip on the right and every extra character has to come from somewhere. The cap is where a
+        /// panel stops being a panel and starts being half the screen; past it, a long name is cut short
+        /// in the list, which is the lesser loss.
+        /// </para>
+        /// </summary>
+        private const float PerNameCharacter = 6f;
+        private const float MostExtraWidth = 150f;
+
+        private static float Inner = BaseInner;
+        private static float PanelWidth = BaseInner + PanelPadding;
 
         private static void BuildPanel()
         {
@@ -1045,6 +1063,13 @@ namespace Stavebound.UI
 
             Rows.Clear();
             NeedsCandidates.Clear();
+
+            float extra = Mathf.Clamp(
+                (StaveboundConfig.PortalNameLength.Value - StaveboundConfig.VanillaPortalNameLength) * PerNameCharacter,
+                0f,
+                MostExtraWidth);
+            Inner = BaseInner + extra;
+            PanelWidth = Inner + PanelPadding;
 
             // Anchored to the left edge rather than offset from the centre, so the panel sits beside
             // the map at every resolution instead of sliding off the side of a narrow screen.

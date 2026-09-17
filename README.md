@@ -114,6 +114,7 @@ choose. Each of these can be switched off under `8 - Selector`.
 | `SeamlessTransit` | Off by default. Ends a trip when the destination has loaded rather than on vanilla's eight-second timer — a destination already in memory skips the loading screen entirely |
 | `ShowBlockedCargoOverlay` | Marks the stacks a nearby portal's destination will refuse |
 | `HidePortalNames` | Hides names in the selector, if you would rather navigate by the map |
+| `PortalNameLength` | How long a portal's name may be. Vanilla's 10 by default; up to 64, and the selector widens to suit |
 | `ClearLeftBehindBodies` | On by default. Clears the body another player leaves at a portal after travelling — the game stops telling you where they went, so your game asks |
 | `ClickPicksPortal` | On by default. Clicking a destination in the list or dropdown picks it at once; off, a click only highlights and the confirm key picks |
 | `MapClickPicksPortal` | On by default. Clicking a portal's pin on the map picks it and closes the map; off, it only highlights |

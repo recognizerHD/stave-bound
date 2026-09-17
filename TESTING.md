@@ -9,7 +9,23 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Balance — wants sessions, not checklists
+## 1. Longer portal names — built, not run
+
+`PortalNameLength` (default 10, up to 64) is handed to the rename dialog, and the selector's panel
+widens by 6px per character above 10, capped at 150px — so names stay readable to about 35 characters
+before the list truncates instead.
+
+- [ ] Raise it, rename a portal, and the dialog accepts the longer name
+- [ ] The selector's panel is wider to match, and long names are readable in the list rather than
+      running into the clearance chips
+- [ ] Past ~35 characters the name is cut short in the list and the panel stops growing — the row
+      should still read sensibly
+- [ ] The name shows in full in the dropdown, on the map pin and in refusal messages
+- [ ] Back at 10, the panel is its old width
+- [ ] It is synced: a client cannot raise it locally, and the server's value wins
+- [ ] A long name survives a relog and reaches other players
+
+## 2. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -23,7 +39,7 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 2. Standing gaps
+## 3. Standing gaps
 
 Smaller, older, and none of them blocking.
 

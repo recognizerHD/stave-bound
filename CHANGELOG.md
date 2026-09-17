@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+**Portal names can be longer than ten characters.** `PortalNameLength` raises the
+limit, up to 64, and the selector's panel widens to suit. Vanilla's 10 stays the
+default. Set on the server, so every portal in a world is named under one rule —
+though a player on an older build still types under 10 while seeing everyone
+else's longer names normally.
+
 ## 1.1.1 — 2026-09-15
 
 **A player who walks through a portal no longer leaves their body standing there**
