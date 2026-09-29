@@ -50,7 +50,9 @@ and the smaller standing gaps live in `TESTING.md` — read it before proposing 
 A player reported 1.2.0 dropping to 15-30 FPS whenever an inventory was open, on a world with no
 portals in it. It was the cargo overlay searching the scene for the nearest portal, from a postfix the
 game runs every frame per open grid; loaded portals now come from a list kept at `TeleportWorld.Awake`.
-Fixed but **not yet watched in play** — see TESTING.md §1.
+Fixed and measured in 1.2.1 — the collapse is gone and what remains with an inventory open is the base
+game's own panel. TESTING.md's record has the frame times, and one measurement there contradicted a
+confident reading of the code; read it before optimising this path again.
 
 A traveller's body used to be left standing at the departure portal on everyone else's screen.
 `stave_players` proved it: the server knew where the traveller had gone, so their own game reported the

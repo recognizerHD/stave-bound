@@ -9,32 +9,7 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. The inventory framerate fix — built, not run
-
-**Reported against 1.2.0**: opening the inventory or a chest dropped the game to 15-30 FPS and held it
-there for as long as the panel was open, on a fresh world with no portals built. The cause is not in
-doubt — the cargo overlay asked "which portal am I standing at" from `InventoryGrid.UpdateGui`, which
-runs every frame per open grid, and the answer came from a scene-wide `FindObjectsByType`, which costs
-the same whether the world has fifty portals or none. It now reads a list kept from
-`TeleportWorld.Awake` instead. What has not been done is watching a framerate.
-
-- [ ] **Open the inventory on a fresh world with no portals and the framerate does not move.** The
-      reporter's case exactly, and the one that matters
-- [ ] Same beside a chest, with both grids drawn
-- [ ] Same at a portal, with a base full of them loaded
-- [ ] `ShowBlockedCargoOverlay` back on and `CargoPreviewRange` back at its default — the reporter's
-      workaround was to turn both off, so the fix is only a fix with them on
-- [ ] **The overlay still marks the right stacks**, since the slot loop changed too: it now only ever
-      turns vanilla's mark off, never on
-- [ ] A stack the destination accepts loses its mark; one it refuses keeps it; walk away from the
-      portal and the marks go back to meaning "cannot teleport at all"
-- [ ] Build a portal and walk up to it without relogging — a portal only enters the list at `Awake`,
-      so a newly built one is the case that would expose a miss
-- [ ] Sail away until portals unload, come back, and the overlay still answers
-- [ ] Leave the world and load another: no stale portals carried across
-- [ ] Holding a stave still shows its beam and range circle, which read the same list
-
-## 2. Longer portal names — built, not run
+## 1. Longer portal names — built, not run
 
 `PortalNameLength` defaults to 32 and accepts 10 to 32. It is handed to the rename dialog, and the
 panel widens by 3px per allowed character above vanilla's ten — sized so that a 32-character name
@@ -48,7 +23,7 @@ still fits a row whole, which is the claim to check.
 - [ ] It is synced: a client cannot raise it locally, and the server's value wins
 - [ ] A long name survives a relog and reaches other players
 
-## 3. Balance — wants sessions, not checklists
+## 2. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -62,9 +37,15 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 4. Standing gaps
+## 3. Standing gaps
 
 Smaller, older, and none of them blocking.
+
+- [ ] The loaded-portal list behind the 1.2.1 framerate fix was measured where it mattered, but three
+      of its edges were not: a portal **built while you watch** (it joins the list at `Awake`, so a new
+      one is where a miss would show), portals **unloaded and reloaded** by sailing away and back, and
+      **another world loaded** in the same session without stale portals carried across
+- [ ] Holding a stave still draws its beam and range circle, which read that same list
 
 - [ ] Gamepad navigation of the selector has been exercised far less than keyboard — and not at all
       since the panel was rebuilt for the mouse. Navigation is off on every new control precisely so the
@@ -79,6 +60,37 @@ Smaller, older, and none of them blocking.
 ## Confirmed
 
 Kept as a record of what the tests were, so a regression has something to be measured against.
+
+### The inventory framerate collapse — reported, fixed, measured
+
+A player reported 1.2.0 dropping to 15-30 FPS for as long as an inventory or chest was open, on a
+fresh world with no portals built in it, and traced it themselves to the `3 - Cargo preview` settings.
+
+The cargo overlay asked which portal the player was standing at, and the answer came from
+`Object.FindObjectsByType<TeleportWorld>` — a scene-wide search, from a postfix on
+`InventoryGrid.UpdateGui`, which the game runs every frame for the player's grid and again for an open
+chest's. The search is priced by how much is loaded rather than by how many portals it finds, which is
+why an empty world was just as slow. Loaded portals now come from a list kept at `TeleportWorld.Awake`.
+
+Measured after the fix, converting to frame time because FPS hides the shape of it:
+
+| Where | Inventory closed | Inventory open | Cost |
+|---|---|---|---|
+| Built-up zone | ~68 FPS / 14.7 ms | ~52 FPS / 19.2 ms | +4.5 ms |
+| Fresh zone | ~142 FPS / 7.0 ms | 125 FPS / 8.0 ms | +1.0 ms |
+
+The reported collapse is gone. What remains is the base game's own inventory panel, and the control
+that established it was run at one portal, in one spot, with the inventory open each time:
+
+1. carrying nothing the game refuses to teleport, so vanilla marks nothing and our loop touches nothing
+2. carrying ore the destination **refuses**, so the mark stays and we write nothing
+3. carrying ore the destination **accepts**, so we take the mark off
+
+All three read the same. That matters because a theory said they would not: vanilla writes each ore
+slot's mark on every frame, we were taking it off again on every frame, and a Unity image toggled that
+often rebuilds itself and re-marks its canvas each time — which should have made case 3 the expensive
+one. It didn't, so the write is cheap and no further change was made. **Worth remembering as a
+measurement that contradicted a confident reading of the code.**
 
 ### The body left standing at a portal — diagnosed, fixed, passed
 

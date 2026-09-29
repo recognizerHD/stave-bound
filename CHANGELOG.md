@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.1 — 2026-09-29
 
 **Opening your inventory no longer costs you most of your framerate.** Since 1.2.0, opening the
 inventory or a chest dropped the game to 15-30 FPS and held it there for as long as the panel was
