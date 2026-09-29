@@ -74,7 +74,9 @@ namespace Stavebound.Travel
 
         /// <summary>
         /// May this player carry what they are holding into <paramref name="destination"/>? Used by the
-        /// portal glow, which asks the question every frame and only wants a yes or no.
+        /// portal glow, which only wants a yes or no. The glow rides vanilla's <c>UpdatePortal</c>, an
+        /// <c>InvokeRepeating</c> twice a second rather than a per-frame update, so walking the
+        /// inventory here is affordable.
         /// </summary>
         internal static bool Allows(Player player, ZDO source, ZDO destination, bool allowAllItems)
         {

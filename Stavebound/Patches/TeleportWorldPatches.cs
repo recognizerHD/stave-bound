@@ -325,5 +325,21 @@ namespace Stavebound.Patches
 
             ZDOMan.instance?.RequestZDO(target.Id);
         }
+
+        /// <summary>
+        /// Notes every portal as it loads, so that finding the one a player is standing at does not
+        /// have to search the scene. See <see cref="LoadedPortals"/> for why that matters.
+        /// <para>
+        /// <c>Awake</c> is the one moment every portal passes through, whether it was just built,
+        /// streamed in as you walked up to it, or spawned with the world. There is no matching
+        /// <c>OnDestroy</c> to hook, and none is needed.
+        /// </para>
+        /// </summary>
+        [HarmonyPostfix]
+        [HarmonyPatch("Awake")]
+        private static void RememberThisPortal(TeleportWorld __instance)
+        {
+            LoadedPortals.Remember(__instance);
+        }
     }
 }

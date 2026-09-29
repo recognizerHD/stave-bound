@@ -38,6 +38,7 @@ namespace Stavebound.Staves
         private static CircleProjector _projector;
         private static GameObject _beam;
         private static bool _beamUnavailable;
+        private static bool _circleUnavailable;
 
         private static float _nextSearch;
         private static readonly List<TeleportWorld> InRange = new List<TeleportWorld>();
@@ -96,6 +97,7 @@ namespace Stavebound.Staves
             _projector = null;
             _beam = null;
             _beamUnavailable = false;
+            _circleUnavailable = false;
             _lastAnswer = null;
             _nextSearch = 0f;
             InRange.Clear();
@@ -121,9 +123,8 @@ namespace Stavebound.Staves
 
             float limit = radius * radius;
             InRange.Clear();
-            InRange.AddRange(Object
-                .FindObjectsByType<TeleportWorld>(FindObjectsSortMode.None)
-                .Where(p => p != null && (p.transform.position - at).sqrMagnitude <= limit)
+            InRange.AddRange(LoadedPortals.Current()
+                .Where(p => (p.transform.position - at).sqrMagnitude <= limit)
                 .OrderBy(p => (p.transform.position - at).sqrMagnitude));
         }
 
@@ -221,11 +222,19 @@ namespace Stavebound.Staves
         /// </summary>
         private static bool BuildCircle()
         {
+            if (_circleUnavailable)
+            {
+                // Giving up once rather than every frame. Without this, a game with no circle to
+                // borrow searched for one and logged a warning on every frame a stave was held.
+                return false;
+            }
+
             CircleProjector template = Resources.FindObjectsOfTypeAll<CircleProjector>()
                 .FirstOrDefault(c => c != null && c.m_prefab != null);
 
             if (template == null)
             {
+                _circleUnavailable = true;
                 Jotunn.Logger.LogWarning(
                     "No CircleProjector to borrow, so stave range will not be drawn. " +
                     "The portal it binds to is still named on placement.");

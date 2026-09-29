@@ -182,16 +182,20 @@ namespace Stavebound.Portals
         /// two are close together — nearest within range, the same way an anchor picks the portal it
         /// grants clearance to.
         /// </para>
+        /// <para>
+        /// Walks <see cref="LoadedPortals"/> rather than searching the scene, because the cargo
+        /// overlay asks this every frame while an inventory is open. A scene search there cost players
+        /// most of their framerate; <see cref="LoadedPortals"/> records why in full.
+        /// </para>
         /// </summary>
         internal static TeleportWorld FindNearest(Vector3 point, float range)
         {
             TeleportWorld nearest = null;
             float nearestDistance = range * range;
 
-            // Unsorted: we are picking the minimum ourselves, so paying for InstanceID ordering
-            // would be pure waste.
-            // Fully qualified: `using System` above makes a bare Object ambiguous.
-            foreach (TeleportWorld candidate in UnityEngine.Object.FindObjectsByType<TeleportWorld>(FindObjectsSortMode.None))
+            // A short list, already pruned of anything destroyed, and a List's enumerator is a struct
+            // — so nothing here allocates, which matters for something asked every frame.
+            foreach (TeleportWorld candidate in LoadedPortals.Current())
             {
                 if (ZdoOf(candidate) == null)
                 {
