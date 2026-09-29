@@ -47,6 +47,13 @@ What remains is judgement, not correctness: the §4 costs are placeholders that 
 and whether `Both` is the right shipped default is an open question about how a long game feels. Those
 and the smaller standing gaps live in `TESTING.md` — read it before proposing anything be called done.
 
+A player reported 1.2.0 dropping to 15-30 FPS whenever an inventory was open, on a world with no
+portals in it. It was the cargo overlay searching the scene for the nearest portal, from a postfix the
+game runs every frame per open grid; loaded portals now come from a list kept at `TeleportWorld.Awake`.
+Fixed and measured in 1.2.1 — the collapse is gone and what remains with an inventory open is the base
+game's own panel. TESTING.md's record has the frame times, and one measurement there contradicted a
+confident reading of the code; read it before optimising this path again.
+
 A traveller's body used to be left standing at the departure portal on everyone else's screen.
 `stave_players` proved it: the server knew where the traveller had gone, so their own game reported the
 move — it was the watcher's copy going stale once the server stopped streaming it, the game's area
@@ -81,6 +88,14 @@ Violating any of these means rewriting a lot, so check against them before propo
   throws `FieldAccessException` on every call — with no build-time warning. Patch methods take
   Harmony's `___fieldName` parameter; other callers use a cached `AccessTools.FieldRefAccess`. See
   DESIGN.md §12.
+- **Nothing on a per-frame path may search the scene.** `Object.FindObjectsByType` and
+  `Resources.FindObjectsOfTypeAll` are priced by how much is loaded, not by how many results they
+  find, so they cost the same in an empty world as in a full one. 1.2.0 shipped with the cargo overlay
+  reaching one from `InventoryGrid.UpdateGui` and cost players most of their framerate with an
+  inventory open. Loaded portals come from `LoadedPortals`; a borrowed prefab is searched once and
+  cached, with the failure also remembered so a miss does not retry every frame. And check the cadence
+  of a patch target before putting work in it — DESIGN.md §12 has the table, and it is not what the
+  method names suggest.
 - **Never mutate `m_shared.m_teleportable`.** It's shared item data; changes leak into tooltips,
   other mods, and everything else that asks. Gate travel with a scoped context flag instead. This is
   the single most common bug in existing portal mods. The inventory overlay is the tempting place to
