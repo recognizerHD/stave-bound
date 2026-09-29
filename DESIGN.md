@@ -359,6 +359,7 @@ names are unverified; see §12.
 | **The check** | Prefix on `TeleportWorld.Teleport(Player)`: resolve destination → read mask → walk `Inventory.GetAllItems()` for `m_shared.m_teleportable == false` → allow, or refuse with a named reason through `Character.Message`. Suppress vanilla's `Humanoid.IsTeleportable()` via a scoped context flag, and honour the portal's own `m_allowAllItems`. |
 | **What not to do** | Do **not** flip `m_shared.m_teleportable` on shared item data to let ore through. It's shared state — it leaks into tooltips, other mods, and anything else that asks. Several existing portal mods take that shortcut and it's why they conflict. |
 | **Left-behind bodies** | A player's position is streamed only to peers near them, and a portal is the one way to leave an area without crossing its edge — so every watcher keeps their last copy of a traveller, standing at the portal, indefinitely. Not caused here, but portals are what makes it happen, so clients sweep for stuck copies and ask `ZDOMan.RequestZDO` for a fresh one; the game culls the body itself once the refreshed position lands outside its sectors. Client-side, and asks nothing of the server. |
+| **"Which portal am I at"** | A list of loaded portals kept from `TeleportWorld.Awake` (`LoadedPortals`), never a scene search. `Object.FindObjectsByType` is priced by how much is loaded rather than by how many portals it finds, and the cargo overlay asks this from `InventoryGrid.UpdateGui` — which the game runs **every frame, per open grid**. 1.2.0 shipped that combination and cost players most of their framerate whenever an inventory was open, in a world with no portals in it at all. Anything asked from a per-frame path goes through the list (§12). |
 | **Trust model** | Player inventories are client-side in Valheim, so cargo checks are client-trusting — same as vanilla. The server can authoritatively own **clearance**, never **cargo**. Put that in the readme: this is a rule system for a co-op server, not anti-cheat. |
 | **Install** | Server **and** every client. Config syncs from the server so tiers can't be edited locally. |
 | **Uninstalling** | Extra ZDO keys are harmless to a vanilla client. Custom pieces are not — remove the mod and every stave vanishes. Normal for custom-piece mods; warn anyway. |
@@ -807,6 +808,33 @@ by hand: **never read or write a private game member directly.** Patch methods t
 `___fieldName` injected parameter; everything else goes through a cached
 `AccessTools.FieldRefAccess`, which is emitted once and costs about what the field access would have.
 Public members — and most of what we need is public — are fine as they are.
+
+#### How often our patch targets run
+
+Cost is a property of cadence, and the cadence is not guessable from the method name — `UpdateGui`
+sounds like something that runs when the GUI changes, and `UpdatePortal` sounds like something that
+runs every frame. Both are the other way round. Read off the IL:
+
+| Target | Runs |
+|---|---|
+| `InventoryGrid.UpdateGui` | **Every frame, once per open grid.** `InventoryGui.Update` → `UpdateInventory` *and* `UpdateContainer` → `InventoryGrid.UpdateInventory` → `UpdateGui`, so the player's grid and an open chest's are each redrawn per frame for as long as the panel is up. |
+| `TeleportWorld.UpdatePortal` | **Twice a second.** `InvokeRepeating("UpdatePortal", 0.5f, 0.5f)` from `Awake` — not an `Update`. Walking a player's whole inventory from here is affordable; `TeleportWorld.Update` itself only lerps the emission colour. |
+| `Minimap.Update`, `Player.UpdatePlacementGhost` | Every frame, as the names promise. |
+
+**`Object.FindObjectsByType` is priced by the scene, not by the answer.** It walks every component of
+that type in the scene and allocates an array to hand back, so it costs the same in a world with no
+portals as in one with fifty. Called once from a console command it looks free, which is how it got
+into the shared helper that answers "which portal is the player standing at" — and then into the cargo
+overlay, on a per-frame path, where it cost players most of their framerate with an inventory open.
+Fixed in 1.2.1 by keeping a list of loaded portals from `TeleportWorld.Awake` (§6). The game has no
+`TeleportWorld.OnDestroy` to pair with it, and needs none: Unity reports a destroyed component as
+`== null`, so dead entries are dropped as the list is walked.
+
+**Vanilla's `m_noteleport` condition**, which the cargo overlay narrows, is
+`!item.m_shared.m_teleportable && !ZoneSystem.instance.GetGlobalKey(GlobalKeys.TeleportAll)`
+(`GlobalKeys` 35). So a world with the teleport-everything key set has no marks at all. Our postfix
+only ever turns a mark **off**, never on, which keeps that key honoured for free and means the loop
+has to look at none of the slots vanilla left unmarked.
 
 Two things the game has grown that the spec didn't know about:
 

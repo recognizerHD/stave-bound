@@ -32,6 +32,7 @@ namespace Stavebound.Patches
         private static void StopRegistry()
         {
             PortalRegistry.OnWorldEnd();
+            LoadedPortals.Forget();
             SiteSweep.Stop();
             StaleTravellers.OnWorldEnd();
             PlacementFeedback.Reset();

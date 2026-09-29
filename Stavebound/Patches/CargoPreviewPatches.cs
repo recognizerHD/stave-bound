@@ -13,6 +13,12 @@ namespace Stavebound.Patches
     /// copper, every copper stack in the chest is still crossed out. A postfix re-answers the question
     /// per slot, leaving vanilla's answer alone whenever there is no portal nearby to be talking about.
     /// </para>
+    /// <para>
+    /// It only ever <em>narrows</em>: a slot vanilla left unmarked stays unmarked, so nothing becomes
+    /// blocked that the game would have carried — including in a world whose <c>TeleportAll</c> key
+    /// waives the rule for everything. That also keeps the loop cheap, since the marked slots are the
+    /// only ones worth a second look, and the game runs this every frame an inventory is open.
+    /// </para>
     /// </summary>
     [HarmonyPatch(typeof(InventoryGrid))]
     internal static class CargoPreviewPatches
@@ -39,8 +45,13 @@ namespace Stavebound.Patches
 
             foreach (InventoryElement element in ___m_elements)
             {
-                if (element?.m_noteleport == null || !element.m_used)
+                if (element?.m_noteleport == null || !element.m_used || !element.m_noteleport.enabled)
                 {
+                    // Vanilla left the mark off, so this slot is empty, holds something that
+                    // teleports, or sits in a world whose TeleportAll key waives the rule entirely.
+                    // We only ever narrow vanilla's answer — never mark something it didn't — so
+                    // there is nothing here to narrow, and skipping spares a lookup per slot per
+                    // frame.
                     continue;
                 }
 

@@ -9,7 +9,32 @@ the code already convinced someone, and that turned out not to be enough.
 
 ---
 
-## 1. Longer portal names — built, not run
+## 1. The inventory framerate fix — built, not run
+
+**Reported against 1.2.0**: opening the inventory or a chest dropped the game to 15-30 FPS and held it
+there for as long as the panel was open, on a fresh world with no portals built. The cause is not in
+doubt — the cargo overlay asked "which portal am I standing at" from `InventoryGrid.UpdateGui`, which
+runs every frame per open grid, and the answer came from a scene-wide `FindObjectsByType`, which costs
+the same whether the world has fifty portals or none. It now reads a list kept from
+`TeleportWorld.Awake` instead. What has not been done is watching a framerate.
+
+- [ ] **Open the inventory on a fresh world with no portals and the framerate does not move.** The
+      reporter's case exactly, and the one that matters
+- [ ] Same beside a chest, with both grids drawn
+- [ ] Same at a portal, with a base full of them loaded
+- [ ] `ShowBlockedCargoOverlay` back on and `CargoPreviewRange` back at its default — the reporter's
+      workaround was to turn both off, so the fix is only a fix with them on
+- [ ] **The overlay still marks the right stacks**, since the slot loop changed too: it now only ever
+      turns vanilla's mark off, never on
+- [ ] A stack the destination accepts loses its mark; one it refuses keeps it; walk away from the
+      portal and the marks go back to meaning "cannot teleport at all"
+- [ ] Build a portal and walk up to it without relogging — a portal only enters the list at `Awake`,
+      so a newly built one is the case that would expose a miss
+- [ ] Sail away until portals unload, come back, and the overlay still answers
+- [ ] Leave the world and load another: no stale portals carried across
+- [ ] Holding a stave still shows its beam and range circle, which read the same list
+
+## 2. Longer portal names — built, not run
 
 `PortalNameLength` defaults to 32 and accepts 10 to 32. It is handed to the rename dialog, and the
 panel widens by 3px per allowed character above vanilla's ten — sized so that a 32-character name
@@ -23,7 +48,7 @@ still fits a row whole, which is the claim to check.
 - [ ] It is synced: a client cannot raise it locally, and the server's value wins
 - [ ] A long name survives a relog and reaches other players
 
-## 2. Balance — wants sessions, not checklists
+## 3. Balance — wants sessions, not checklists
 
 Open questions that only real play answers. Nothing here is a bug, and nothing here blocks a release
 — it decides what the shipped defaults should be.
@@ -37,7 +62,7 @@ Open questions that only real play answers. Nothing here is a bug, and nothing h
       The lever is the metal component, and it is a config line rather than a design change
 - [ ] **Does `Deliver` have an audience,** or is it a symmetry nobody plays?
 
-## 3. Standing gaps
+## 4. Standing gaps
 
 Smaller, older, and none of them blocking.
 

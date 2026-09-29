@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+**Opening your inventory no longer costs you most of your framerate.** Since 1.2.0, opening the
+inventory or a chest dropped the game to 15-30 FPS and held it there for as long as the panel was
+open — on any world, including a brand new one with no portals built in it.
+
+The overlay that marks the stacks a portal will refuse has to know which portal you are standing at,
+and it asked the game to find that by searching the whole scene. That search costs the same whether
+the world holds fifty portals or none, and the inventory panel redraws every frame — twice, with a
+chest open. The mod now keeps a list of the portals loaded around you and reads that instead, which is
+the same answer for none of the cost.
+
+**If you turned the overlay off to get your framerate back, turn it back on.** Set
+`ShowBlockedCargoOverlay = true` and `CargoPreviewRange` back to `8` in
+`com.recognizerhd.stavebound.cfg`. Nothing rewrites a config file that already exists, so those have
+to go back by hand.
+
+Also fixed, from the same pass: in a world whose `TeleportAll` key lets everything through portals, the
+overlay marked stacks the game would have carried. It now only ever removes one of the base game's
+marks, never adds one.
+
+**Safe to update alone.** A patch release, so this and 1.2.0 still connect to each other, and the fix
+asks nothing of the server.
+
 ## 1.2.0 — 2026-09-17
 
 **Everyone has to update together this time.** Stavebound will not connect across
